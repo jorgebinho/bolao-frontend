@@ -1,0 +1,61 @@
+/* src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── BASE RESET NEOBRUTALISTA ─────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Space Grotesk', monospace;
+  background-color: #E8E8E8;
+  color: #0A0A0A;
+  /* Evita scroll horizontal em mobile */
+  overflow-x: hidden;
+}
+
+/* ─── SCROLLBAR ESTILIZADA ─────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track { background: #E8E8E8; }
+::-webkit-scrollbar-thumb { background: #0A0A0A; }
+::-webkit-scrollbar-thumb:hover { background: #FFE600; }
+
+/* ─── INPUT NUMBER — REMOVE SETAS ─────────────────────────────────────────── */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] { -moz-appearance: textfield; }
+
+/* ─── SELECTION ────────────────────────────────────────────────────────────── */
+::selection {
+  background: #FFE600;
+  color: #0A0A0A;
+}
+
+/* ─── FOCUS VISÍVEL PARA ACESSIBILIDADE ────────────────────────────────────── */
+:focus-visible {
+  outline: 3px solid #0057FF;
+  outline-offset: 2px;
+}
+
+/* ─── FONT DISPLAY UTILITY ─────────────────────────────────────────────────── */
+.font-display {
+  font-family: 'Black Han Sans', Impact, sans-serif;
+}
+
+.font-body {
+  font-family: 'Space Grotesk', monospace;
+}
