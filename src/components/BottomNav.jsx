@@ -1,68 +1,35 @@
-// src/components/BottomNav.jsx
-import { NavLink, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import toast from "react-hot-toast";
+import { NavLink } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+
+const items = [
+  { to: '/', label: 'Jogos', end: true },
+  { to: '/ranking', label: 'Ranking' },
+  { to: '/groups', label: 'Grupos' },
+  { to: '/history', label: 'Historico' },
+  { to: '/profile', label: 'Perfil' },
+];
 
 export default function BottomNav() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  function handleLogout() {
-    logout();
-    toast.success("Até logo! 👋");
-    navigate("/login");
-  }
+  const { user } = useAuth();
+  const navItems = user?.role === 'ADMIN' ? [...items, { to: '/admin', label: 'Admin' }] : items;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-brutal-black border-t-4 border-brutal-black">
-      <div className="flex">
-        <NavLink
-          to="/"
-          end
-          className={({ isActive }) =>
-            `flex-1 flex flex-col items-center py-3 font-display text-xs tracking-wider transition-colors border-r-4 border-brutal-black/40
-            ${isActive ? "bg-brutal-yellow text-brutal-black" : "text-brutal-yellow/60 hover:text-brutal-yellow"}`
-          }
-        >
-          <span className="text-lg">⚽</span>
-          <span>JOGOS</span>
-        </NavLink>
-
-        <NavLink
-          to="/ranking"
-          className={({ isActive }) =>
-            `flex-1 flex flex-col items-center py-3 font-display text-xs tracking-wider transition-colors border-r-4 border-brutal-black/40
-            ${isActive ? "bg-brutal-yellow text-brutal-black" : "text-brutal-yellow/60 hover:text-brutal-yellow"}`
-          }
-        >
-          <span className="text-lg">🏆</span>
-          <span>RANKING</span>
-        </NavLink>
-
-        {user?.role === "ADMIN" && (
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t-4 border-brutal-black bg-brutal-black lg:hidden">
+      <div className="flex overflow-x-auto">
+        {navItems.map((item) => (
           <NavLink
-            to="/admin"
+            key={item.to}
+            to={item.to}
+            end={item.end}
             className={({ isActive }) =>
-              `flex-1 flex flex-col items-center py-3 font-display text-xs tracking-wider transition-colors border-r-4 border-brutal-black/40
-              ${isActive ? "bg-brutal-red text-brutal-white" : "text-brutal-red/80 hover:text-brutal-red"}`
+              `min-w-[78px] flex-1 border-r-2 border-brutal-yellow/15 px-2 py-3 text-center font-display text-[10px] tracking-wider transition-colors ${
+                isActive ? 'bg-brutal-yellow text-brutal-black' : 'text-brutal-yellow/65 hover:text-brutal-yellow'
+              }`
             }
           >
-            <span className="text-lg">⚙️</span>
-            <span>ADMIN</span>
+            {item.label.toUpperCase()}
           </NavLink>
-        )}
-
-        {/* Pontuação do usuário */}
-        <div
-          className="flex-1 flex flex-col items-center py-3 cursor-pointer"
-          onClick={handleLogout}
-          title="Clique para sair"
-        >
-          <span className="text-lg">🚪</span>
-          <span className="font-display text-xs text-brutal-yellow/60 tracking-wider">
-            SAIR
-          </span>
-        </div>
+        ))}
       </div>
     </nav>
   );

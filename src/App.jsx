@@ -8,6 +8,9 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import RankingPage from './pages/RankingPage';
 import AdminPage from './pages/AdminPage';
+import GroupsPage from './pages/GroupsPage';
+import ProfilePage from './pages/ProfilePage';
+import HistoryPage from './pages/HistoryPage';
 
 export default function App() {
   return (
@@ -28,6 +31,9 @@ export default function App() {
           >
             <Route index element={<DashboardPage />} />
             <Route path="ranking" element={<RankingPage />} />
+            <Route path="groups" element={<GroupsPage />} />
+            <Route path="history" element={<HistoryPage />} />
+            <Route path="profile" element={<ProfilePage />} />
             <Route
               path="admin"
               element={
