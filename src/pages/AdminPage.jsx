@@ -1,11 +1,11 @@
-// src/pages/AdminPage.jsx
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import toast from 'react-hot-toast';
 import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import AdminMatchModal from '../components/AdminMatchModal';
-import toast from 'react-hot-toast';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Badge, Button, Card, EmptyState, Input, LoadingState, PageHeader, StatCard } from '../components/ui';
 
 export default function AdminPage() {
   const { user: me } = useAuth();
@@ -13,19 +13,22 @@ export default function AdminPage() {
   const [users, setUsers] = useState([]);
   const [tab, setTab] = useState('matches');
   const [loading, setLoading] = useState(true);
-  const [selectedMatch, setSelectedMatch] = useState(null); // null = fechado, {} = novo, match = editar
+  const [selectedMatch, setSelectedMatch] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [champion, setChampion] = useState('');
+  const [savingChampion, setSavingChampion] = useState(false);
 
   const fetchData = useCallback(async () => {
+    setLoading(true);
     try {
       const [matchesRes, usersRes] = await Promise.all([
         api.get('/matches'),
         api.get('/admin/users'),
       ]);
-      setMatches(matchesRes.data.matches);
-      setUsers(usersRes.data.users);
+      setMatches(matchesRes.data.matches || []);
+      setUsers(usersRes.data.users || []);
     } catch {
-      toast.error('Erro ao carregar dados.');
+      toast.error('Erro ao carregar dados do admin.');
     } finally {
       setLoading(false);
     }
@@ -43,213 +46,185 @@ export default function AdminPage() {
     setShowModal(true);
   }
 
-  function closeModal() {
-    setShowModal(false);
-    setSelectedMatch(null);
-  }
-
   async function handlePromoteUser(userId, userName) {
-    if (!confirm(`Promover "${userName}" a ADMIN?`)) return;
+    if (!confirm(`Promover "${userName}" a admin?`)) return;
     try {
       await api.patch(`/admin/users/${userId}/promote`);
-      toast.success(`${userName} agora é ADMIN!`);
+      toast.success(`${userName} agora e admin.`);
       fetchData();
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Erro ao promover.');
+      toast.error(err.response?.data?.error || 'Erro ao promover usuario.');
     }
   }
 
   async function handleDemoteUser(userId, userName) {
-    if (!confirm(`Remover cargo de ADMIN de "${userName}"?`)) return;
+    if (!confirm(`Remover admin de "${userName}"?`)) return;
     try {
       await api.patch(`/admin/users/${userId}/demote`);
-      toast.success(`${userName} agora é usuário comum.`);
+      toast.success(`${userName} agora e usuario comum.`);
       fetchData();
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Erro ao rebaixar.');
+      toast.error(err.response?.data?.error || 'Erro ao rebaixar usuario.');
     }
   }
 
   async function handleDeleteUser(userId, userName) {
-    if (!confirm(`EXCLUIR "${userName}" do bolão? Esta ação não pode ser desfeita.`)) return;
+    if (!confirm(`Excluir "${userName}" do bolao?`)) return;
     try {
       await api.delete(`/admin/users/${userId}`);
-      toast.success(`${userName} foi removido.`);
+      toast.success('Usuario removido.');
       fetchData();
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Erro ao remover usuário.');
+      toast.error(err.response?.data?.error || 'Erro ao remover usuario.');
     }
   }
 
-  const STATUS_BADGE = {
-    UPCOMING: 'bg-brutal-green text-brutal-black',
-    LOCKED:   'bg-brutal-orange text-brutal-black',
-    FINISHED: 'bg-brutal-black text-brutal-yellow',
-  };
+  async function saveChampion(event) {
+    event.preventDefault();
+    if (!champion.trim()) return toast.error('Informe a selecao campea.');
+
+    setSavingChampion(true);
+    try {
+      const { data } = await api.post('/admin/champion-result', { champion });
+      toast.success(`Campeao salvo. ${data.processed || 0} palpites processados.`);
+      setChampion('');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erro ao salvar campeao.');
+    } finally {
+      setSavingChampion(false);
+    }
+  }
+
+  const openMatches = matches.filter((match) => match.status === 'UPCOMING').length;
+  const finishedMatches = matches.filter((match) => match.status === 'FINISHED').length;
 
   return (
-    <div className="min-h-screen bg-brutal-gray pb-20">
-      {/* Admin Banner */}
-      <div className="bg-brutal-red border-b-4 border-brutal-black px-4 py-3 flex items-center gap-2">
-        <span className="text-xl">⚙️</span>
-        <div>
-          <p className="font-display text-xs tracking-widest text-brutal-white">PAINEL DO ADMINISTRADOR</p>
-          <p className="font-body text-xs text-brutal-white/60 font-bold">{me?.name}</p>
+    <div>
+      <PageHeader
+        eyebrow={`Admin - ${me?.name || ''}`}
+        title="Painel admin"
+        description="Gerencie jogos, usuarios, resultados e o campeao oficial."
+      />
+
+      <div className="space-y-5 px-4 py-5 sm:px-0">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <StatCard label="Jogos" value={matches.length} tone="yellow" />
+          <StatCard label="Abertos" value={openMatches} tone="green" />
+          <StatCard label="Finalizados" value={finishedMatches} tone="white" />
+          <StatCard label="Usuarios" value={users.length} tone="blue" />
         </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="flex border-b-4 border-brutal-black bg-brutal-white">
-        <button
-          onClick={() => setTab('matches')}
-          className={`flex-1 py-3 font-display text-xs tracking-wider transition-colors ${
-            tab === 'matches' ? 'bg-brutal-black text-brutal-yellow' : 'text-brutal-black hover:bg-brutal-gray'
-          }`}
-        >
-          ⚽ JOGOS ({matches.length})
-        </button>
-        <button
-          onClick={() => setTab('users')}
-          className={`flex-1 py-3 font-display text-xs tracking-wider border-l-4 border-brutal-black transition-colors ${
-            tab === 'users' ? 'bg-brutal-black text-brutal-yellow' : 'text-brutal-black hover:bg-brutal-gray'
-          }`}
-        >
-          👥 USUÁRIOS ({users.length})
-        </button>
-      </div>
+        <Card className="p-3">
+          <div className="flex gap-2 overflow-x-auto">
+            {[
+              ['matches', `Jogos (${matches.length})`],
+              ['users', `Usuarios (${users.length})`],
+              ['champion', 'Campeao'],
+            ].map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setTab(key)}
+                className={`flex-shrink-0 border-4 border-brutal-black px-3 py-2 font-display text-xs tracking-wider ${
+                  tab === key ? 'bg-brutal-black text-brutal-yellow' : 'bg-brutal-white hover:bg-brutal-yellow'
+                }`}
+              >
+                {label.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </Card>
 
-      <div className="px-4 pt-4">
-        {/* ─── TAB JOGOS ─── */}
         {tab === 'matches' && (
-          <>
-            <button
-              onClick={openNewMatch}
-              className="w-full mb-4 py-4 border-4 border-brutal-black bg-brutal-green text-brutal-black font-display tracking-wider shadow-brutal hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
-            >
-              ➕ CADASTRAR NOVO JOGO
-            </button>
-
+          <div className="space-y-4">
+            <Button variant="success" className="w-full" onClick={openNewMatch}>CADASTRAR NOVO JOGO</Button>
             {loading ? (
-              <div className="space-y-3">
-                {[1, 2].map((i) => (
-                  <div key={i} className="border-4 border-brutal-black h-20 bg-brutal-yellow/30 animate-pulse" />
-                ))}
-              </div>
+              <LoadingState rows={3} type="row" />
             ) : matches.length === 0 ? (
-              <div className="border-4 border-brutal-black bg-brutal-white p-8 text-center shadow-brutal">
-                <p className="font-display text-brutal-black">NENHUM JOGO CADASTRADO</p>
-              </div>
+              <EmptyState title="Nenhum jogo cadastrado" description="Crie o primeiro jogo para liberar palpites." />
             ) : (
-              <div className="space-y-3">
+              <div className="grid gap-3 lg:grid-cols-2">
                 {matches.map((match) => (
                   <button
                     key={match.id}
                     onClick={() => openEditMatch(match)}
-                    className="w-full border-4 border-brutal-black bg-brutal-white shadow-brutal hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all text-left p-3"
+                    className="border-4 border-brutal-black bg-brutal-white p-4 text-left shadow-brutal transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className={`font-display text-xs px-2 py-0.5 border-2 border-brutal-black ${STATUS_BADGE[match.status]}`}>
-                        {match.status}
-                      </span>
-                      <span className="font-body text-xs text-brutal-black/50 font-bold">
-                        {format(new Date(match.matchDate), "dd/MM HH:mm", { locale: ptBR })}
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <Badge tone={match.status === 'FINISHED' ? 'dark' : match.status === 'LOCKED' ? 'warning' : 'success'}>{match.status}</Badge>
+                      <span className="text-xs font-bold text-brutal-black/50">
+                        {format(new Date(match.matchDate), 'dd/MM HH:mm', { locale: ptBR })}
                       </span>
                     </div>
-                    <p className="font-display text-sm text-brutal-black">
-                      {match.homeTeam} <span className="opacity-40">vs</span> {match.awayTeam}
-                      {match.status === 'FINISHED' && (
-                        <span className="ml-2 text-brutal-green">
-                          ({match.homeScore} x {match.awayScore})
-                        </span>
-                      )}
-                    </p>
-                    {match.stage && (
-                      <p className="font-body text-xs text-brutal-black/50 mt-0.5 font-bold">{match.stage}</p>
-                    )}
-                    <p className="font-body text-xs text-brutal-black/40 mt-1">
-                      {match.guesses?.length || 0} palpite(s) · toque para editar
-                    </p>
+                    <p className="font-display text-lg">{match.homeTeam} x {match.awayTeam}</p>
+                    {match.status === 'FINISHED' && <p className="font-display text-brutal-green">{match.homeScore} x {match.awayScore}</p>}
+                    <p className="mt-1 text-xs font-bold text-brutal-black/50">{match.stage || 'Sem fase'} - {match.guesses?.length || 0} palpite(s)</p>
                   </button>
                 ))}
               </div>
             )}
-          </>
+          </div>
         )}
 
-        {/* ─── TAB USUÁRIOS ─── */}
         {tab === 'users' && (
-          <div className="space-y-3">
+          <div className="grid gap-3 lg:grid-cols-2">
             {loading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="border-4 border-brutal-black h-16 bg-brutal-yellow/30 animate-pulse" />
-                ))}
-              </div>
+              <LoadingState rows={4} type="row" />
+            ) : users.length === 0 ? (
+              <EmptyState title="Nenhum usuario" description="Usuarios cadastrados aparecem aqui." />
             ) : (
-              users.map((u) => (
-                <div
-                  key={u.id}
-                  className={`border-4 border-brutal-black p-3 shadow-brutal-sm ${
-                    u.role === 'ADMIN' ? 'bg-brutal-yellow' : 'bg-brutal-white'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-display text-sm text-brutal-black truncate">{u.name}</span>
-                        {u.role === 'ADMIN' && (
-                          <span className="font-display text-xs px-1.5 py-0.5 bg-brutal-black text-brutal-yellow border-2 border-brutal-black">
-                            ADMIN
-                          </span>
-                        )}
-                        {u.id === me?.id && (
-                          <span className="font-body text-xs text-brutal-black/50 font-bold">(você)</span>
-                        )}
+              users.map((user) => (
+                <Card key={user.id} className={`p-4 ${user.role === 'ADMIN' ? 'bg-brutal-yellow' : ''}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="truncate font-display text-lg">{user.name}</p>
+                        {user.role === 'ADMIN' && <Badge tone="dark">ADMIN</Badge>}
+                        {user.id === me?.id && <Badge tone="info">VOCE</Badge>}
                       </div>
-                      <p className="font-body text-xs text-brutal-black/50 font-bold truncate">{u.email}</p>
-                      <p className="font-body text-xs text-brutal-black font-bold mt-0.5">
-                        {u.points} pts · {u._count?.guesses || 0} palpites
+                      <p className="truncate text-xs font-bold text-brutal-black/50">{user.email}</p>
+                      <p className="mt-1 text-sm font-bold">
+                        {user.points} pts - {user._count?.guesses || 0} palpites - {user._count?.groupMemberships || 0} grupos
                       </p>
                     </div>
-
-                    {u.id !== me?.id && (
-                      <div className="flex flex-col gap-1.5 flex-shrink-0">
-                        {u.role === 'USER' ? (
-                          <button
-                            onClick={() => handlePromoteUser(u.id, u.name)}
-                            className="px-2 py-1.5 border-2 border-brutal-black bg-brutal-blue text-brutal-white font-display text-xs tracking-wider hover:bg-brutal-purple transition-colors"
-                          >
-                            ADMIN ↑
-                          </button>
+                    {user.id !== me?.id && (
+                      <div className="flex flex-col gap-2">
+                        {user.role === 'USER' ? (
+                          <Button size="sm" variant="secondary" onClick={() => handlePromoteUser(user.id, user.name)}>ADMIN</Button>
                         ) : (
-                          <button
-                            onClick={() => handleDemoteUser(u.id, u.name)}
-                            className="px-2 py-1.5 border-2 border-brutal-black bg-brutal-gray text-brutal-black font-display text-xs tracking-wider"
-                          >
-                            USER ↓
-                          </button>
+                          <Button size="sm" variant="warning" onClick={() => handleDemoteUser(user.id, user.name)}>USER</Button>
                         )}
-                        <button
-                          onClick={() => handleDeleteUser(u.id, u.name)}
-                          className="px-2 py-1.5 border-2 border-brutal-black bg-brutal-red text-brutal-white font-display text-xs tracking-wider hover:opacity-80 transition-opacity"
-                        >
-                          EXCLUIR
-                        </button>
+                        <Button size="sm" variant="danger" onClick={() => handleDeleteUser(user.id, user.name)}>EXCLUIR</Button>
                       </div>
                     )}
                   </div>
-                </div>
+                </Card>
               ))
             )}
           </div>
         )}
+
+        {tab === 'champion' && (
+          <Card className="p-4">
+            <h2 className="font-display text-xl">Campeao oficial</h2>
+            <p className="mt-1 text-sm font-bold text-brutal-black/60">
+              Ao salvar, o backend marca quem acertou o campeao e adiciona os pontos extras no ranking calculado.
+            </p>
+            <form onSubmit={saveChampion} className="mt-4 flex flex-col gap-3 sm:flex-row">
+              <Input value={champion} onChange={(event) => setChampion(event.target.value)} placeholder="Brasil" className="sm:min-w-[280px]" />
+              <Button type="submit" variant="success" loading={savingChampion}>SALVAR CAMPEAO</Button>
+            </form>
+          </Card>
+        )}
       </div>
 
-      {/* Modal */}
       {showModal && (
         <AdminMatchModal
           match={selectedMatch?.id ? selectedMatch : null}
-          onClose={closeModal}
+          onClose={() => {
+            setShowModal(false);
+            setSelectedMatch(null);
+          }}
           onSaved={fetchData}
         />
       )}
