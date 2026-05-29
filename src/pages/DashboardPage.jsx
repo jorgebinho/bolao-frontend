@@ -26,7 +26,7 @@ const STAGE_ORDER = {
   'Oitavas de Final': 30,
   'Quartas de Final': 40,
   Semifinal: 50,
-  'Disputa 3 Lugar': 60,
+  'Disputa 3º Lugar': 60,
   Final: 70,
 };
 
@@ -78,7 +78,7 @@ function ChampionCard() {
       setTeam(guessRes.data.guess?.team || '');
       setTeams(teamsRes.data.teams || []);
     } catch {
-      toast.error('Erro ao carregar palpite de campeao.');
+      toast.error('Erro ao carregar palpite de campeão.');
     } finally {
       setLoading(false);
     }
@@ -88,14 +88,14 @@ function ChampionCard() {
 
   async function saveGuess(event) {
     event.preventDefault();
-    if (!team) return toast.error('Escolha uma selecao.');
+    if (!team) return toast.error('Escolha uma seleção.');
     setSaving(true);
     try {
       const { data } = await api.put('/champion-guess', { team });
       setState(data);
-      toast.success('Palpite de campeao salvo.');
+      toast.success('Palpite de campeão salvo.');
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Erro ao salvar campeao.');
+      toast.error(err.response?.data?.error || 'Erro ao salvar campeão.');
     } finally {
       setSaving(false);
     }
@@ -112,23 +112,23 @@ function ChampionCard() {
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <p className="font-display text-xs tracking-wider text-brutal-black/50">PALPITE EXTRA</p>
-          <h2 className="font-display text-xl">Campeao da Copa</h2>
+          <h2 className="font-display text-xl">Campeão da Copa</h2>
         </div>
-        <Badge tone={state?.isOpen ? 'success' : 'dark'}>{state?.isOpen ? '+5 ate abertura' : 'fechado'}</Badge>
+        <Badge tone={state?.isOpen ? 'success' : 'dark'}>{state?.isOpen ? '+5 até abertura' : 'fechado'}</Badge>
       </div>
       {deadlineLabel && (
         <p className="mb-3 text-xs font-bold text-brutal-black/60">
-          Pode alterar ate o inicio do primeiro jogo: <span className="text-brutal-black">{deadlineLabel}</span>.
+          Pode alterar até o início do primeiro jogo: <span className="text-brutal-black">{deadlineLabel}</span>.
         </p>
       )}
       {state?.officialChampion && (
         <p className="mb-3 border-4 border-brutal-black bg-brutal-green p-2 text-sm font-bold">
-          Campeao oficial: {state.officialChampion}
+          Campeão oficial: {state.officialChampion}
         </p>
       )}
       <form onSubmit={saveGuess} className="flex gap-2">
         <Select value={team} onChange={(event) => setTeam(event.target.value)} disabled={!state?.isOpen} className="h-12 py-2">
-          <option value="">Selecao campea</option>
+          <option value="">Seleção campeã</option>
           {teams.map((item) => (
             <option key={item.id} value={item.name}>
               Grupo {item.group} - {item.name}
@@ -163,7 +163,7 @@ export default function DashboardPage() {
       const { data } = await api.get('/matches');
       setMatches(data.matches || []);
     } catch {
-      setError('Nao foi possivel carregar os jogos.');
+      setError('Não foi possível carregar os jogos.');
       toast.error('Erro ao carregar jogos.');
     } finally {
       setLoading(false);
@@ -232,9 +232,9 @@ export default function DashboardPage() {
   return (
     <div>
       <PageHeader
-        eyebrow={`Ola, ${user?.name?.split(' ')[0] || 'craque'}`}
+        eyebrow={`Olá, ${user?.name?.split(' ')[0] || 'craque'}`}
         title="Jogos e palpites"
-        description="Acompanhe proximos jogos, filtre pendencias e salve seus placares antes do bloqueio."
+        description="Acompanhe próximos jogos, filtre pendências e salve seus placares antes do bloqueio."
         action={
           <div className="grid min-w-[280px] gap-2 sm:grid-cols-2">
             <label className="block">

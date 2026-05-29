@@ -21,7 +21,7 @@ export default function HistoryPage() {
       setRounds(roundsRes.data.rounds || []);
       setHistory(historyRes.data.history || []);
     } catch {
-      toast.error('Erro ao carregar historico.');
+      toast.error('Erro ao carregar histórico.');
     } finally {
       setLoading(false);
     }
@@ -37,7 +37,7 @@ export default function HistoryPage() {
     <div>
       <PageHeader
         eyebrow="desempenho"
-        title="Historico"
+        title="Histórico"
         description="Revise jogos anteriores, seus palpites e pontos por fase."
         action={
           <Select value={activeStage} onChange={(event) => setActiveStage(event.target.value)} className="min-w-[240px] bg-brutal-yellow">
@@ -51,7 +51,7 @@ export default function HistoryPage() {
         {loading ? (
           <LoadingState rows={4} />
         ) : filtered.length === 0 ? (
-          <EmptyState title="Sem historico ainda" description="Quando seus palpites forem finalizados, seu desempenho por fase aparece aqui." />
+          <EmptyState title="Sem histórico ainda" description="Quando seus palpites forem finalizados, seu desempenho por fase aparece aqui." />
         ) : (
           filtered.map((round) => (
             <Card key={round.stage} className="overflow-hidden">

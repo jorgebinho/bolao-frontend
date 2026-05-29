@@ -62,7 +62,7 @@ export default function GroupsPage() {
     setSaving(true);
     try {
       const { data } = await api.post('/groups/join', { code: joinCode });
-      toast.success('Voce entrou no grupo.');
+      toast.success('Você entrou no grupo.');
       setJoinCode('');
       await fetchGroups();
       setSelected(data.group);
@@ -89,7 +89,7 @@ export default function GroupsPage() {
       <PageHeader
         eyebrow="comunidade"
         title="Grupos"
-        description="Crie ligas particulares, entre por codigo e acompanhe o ranking do seu grupo."
+        description="Crie ligas particulares, entre por código e acompanhe o ranking do seu grupo."
       />
 
       <div className="grid gap-5 px-4 py-5 sm:px-0 lg:grid-cols-[360px_1fr]">
@@ -98,15 +98,15 @@ export default function GroupsPage() {
             <h2 className="font-display text-lg">Criar grupo</h2>
             <form onSubmit={createGroup} className="mt-3 space-y-3">
               <Input label="NOME" value={createForm.name} onChange={(event) => setCreateForm((form) => ({ ...form, name: event.target.value }))} placeholder="Amigos da firma" />
-              <Input label="DESCRICAO" value={createForm.description} onChange={(event) => setCreateForm((form) => ({ ...form, description: event.target.value }))} placeholder="Opcional" />
+              <Input label="DESCRIÇÃO" value={createForm.description} onChange={(event) => setCreateForm((form) => ({ ...form, description: event.target.value }))} placeholder="Opcional" />
               <Button type="submit" variant="success" className="w-full" loading={saving}>CRIAR</Button>
             </form>
           </Card>
 
           <Card className="p-4">
-            <h2 className="font-display text-lg">Entrar por codigo</h2>
+            <h2 className="font-display text-lg">Entrar por código</h2>
             <form onSubmit={joinGroup} className="mt-3 flex gap-2">
-              <Input value={joinCode} onChange={(event) => setJoinCode(event.target.value.toUpperCase())} placeholder="CODIGO" className="uppercase" />
+              <Input value={joinCode} onChange={(event) => setJoinCode(event.target.value.toUpperCase())} placeholder="CÓDIGO" className="uppercase" />
               <Button type="submit" loading={saving}>OK</Button>
             </form>
           </Card>
@@ -116,7 +116,7 @@ export default function GroupsPage() {
           {loading ? (
             <LoadingState rows={3} type="row" />
           ) : groups.length === 0 ? (
-            <EmptyState title="Sem grupos" description="Voce ainda nao participa de nenhum grupo." />
+            <EmptyState title="Sem grupos" description="Você ainda não participa de nenhum grupo." />
           ) : (
             <Card className="p-3">
               <div className="flex gap-2 overflow-x-auto pb-1">
@@ -149,7 +149,7 @@ export default function GroupsPage() {
                 </div>
                 <div className="mt-4 inline-flex flex-wrap items-center border-4 border-brutal-black bg-brutal-white">
                   <span className="border-r-4 border-brutal-black px-3 py-2 font-display text-xs tracking-wider text-brutal-black/60">
-                    CODIGO:
+                    CÓDIGO:
                   </span>
                   <span className="px-3 py-2 font-mono text-sm font-bold text-brutal-black">
                     {selected.code}
@@ -162,7 +162,7 @@ export default function GroupsPage() {
                 {membersLoading ? (
                   <div className="mt-3"><LoadingState rows={3} type="row" /></div>
                 ) : members.length === 0 ? (
-                  <EmptyState title="Sem membros" description="Convide pessoas usando o codigo do grupo." />
+                  <EmptyState title="Sem membros" description="Convide pessoas usando o código do grupo." />
                 ) : (
                   <div className="mt-3 space-y-2">
                     {members.map((member) => (

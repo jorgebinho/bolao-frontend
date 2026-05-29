@@ -51,7 +51,7 @@ export default function RankingPage() {
               <p className="font-display text-xs tracking-wider text-brutal-black/60">GRUPO DO RANKING</p>
               <h2 className="font-display text-2xl">{activeGroupName}</h2>
               <p className="text-sm font-bold text-brutal-black/60">
-                Escolha aqui qual grupo voce quer visualizar.
+                Escolha aqui qual grupo você quer visualizar.
               </p>
             </div>
             <Select
@@ -68,7 +68,7 @@ export default function RankingPage() {
 
         {currentUser && (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatCard label="Sua posicao" value={<Position value={currentUser.position} />} tone="yellow" />
+            <StatCard label="Sua posição" value={<Position value={currentUser.position} />} tone="yellow" />
             <StatCard label="Pontos" value={currentUser.totalPoints} tone="green" />
             <StatCard label="Exatos" value={currentUser.exactScores} tone="white" />
             <StatCard label="Parciais" value={currentUser.partialScores} tone="orange" />
@@ -90,7 +90,7 @@ export default function RankingPage() {
                   <h2 className="mt-2 truncate font-display text-2xl">{player.name}</h2>
                   <p className="mt-2 font-display text-5xl leading-none">{player.totalPoints}</p>
                   <p className="mt-1 text-xs font-bold">pontos totais</p>
-                  {player.isCurrentUser && <Badge tone="info" className="mt-3">VOCE</Badge>}
+                  {player.isCurrentUser && <Badge tone="info" className="mt-3">VOCÊ</Badge>}
                 </Card>
               ))}
             </div>
@@ -113,12 +113,12 @@ export default function RankingPage() {
                 >
                   <div className="flex items-center justify-between md:col-span-1 md:block">
                     <Position value={player.position} className="text-xl" />
-                    {player.isCurrentUser && <Badge tone="info" className="md:hidden">VOCE</Badge>}
+                    {player.isCurrentUser && <Badge tone="info" className="md:hidden">VOCÊ</Badge>}
                   </div>
                   <div className="min-w-0 md:col-span-4">
                     <p className="truncate font-display text-lg">{player.name}</p>
                     <p className="text-xs font-bold text-brutal-black/50">
-                      {player.championGuess?.team ? `Campeao: ${player.championGuess.team}` : 'Sem campeao'}
+                      {player.championGuess?.team ? `Campeão: ${player.championGuess.team}` : 'Sem campeão'}
                     </p>
                   </div>
                   <div className="grid grid-cols-4 gap-2 md:contents">
@@ -134,7 +134,7 @@ export default function RankingPage() {
         )}
 
         <Card className="p-4">
-          <p className="font-display text-sm">Criterios de desempate</p>
+          <p className="font-display text-sm">Critérios de desempate</p>
           <p className="mt-2 text-sm font-bold text-brutal-black/60">
             {(tieBreakers.length ? tieBreakers : ['Pontos totais', 'Mais placares exatos', 'Mais acertos parciais']).join(' > ')}
           </p>

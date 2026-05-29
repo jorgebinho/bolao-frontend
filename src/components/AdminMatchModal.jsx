@@ -10,7 +10,7 @@ const WORLD_CUP_TEAMS = [
   'Japão', 'Coreia do Sul', 'EUA', 'México', 'Uruguai', 'Colômbia',
   'Equador', 'Senegal', 'Gana', 'Camarões', 'Tunísia', 'Austrália',
   'Polônia', 'Sérvia', 'Dinamarca', 'Suíça', 'Canadá', 'Qatar',
-  'Costa Rica', 'Irã', 'Arabia Saudita',
+  'Costa Rica', 'Irã', 'Arábia Saudita',
 ];
 
 const STAGES = [
