@@ -9,7 +9,7 @@ export default function AppLayout() {
     { to: '/', label: 'Jogos', end: true },
     { to: '/ranking', label: 'Ranking' },
     { to: '/groups', label: 'Grupos' },
-    { to: '/history', label: 'Historico' },
+    { to: '/history', label: 'Histórico' },
     { to: '/profile', label: 'Perfil' },
     ...(user?.role === 'ADMIN' ? [{ to: '/admin', label: 'Admin' }] : []),
   ];
@@ -23,7 +23,7 @@ export default function AppLayout() {
               B
             </span>
             <div>
-              <p className="font-display text-lg leading-none tracking-widest text-brutal-yellow">BOLAO 2026</p>
+              <p className="font-display text-lg leading-none tracking-widest text-brutal-yellow">BOLÃO 2026</p>
               <p className="text-xs font-bold text-brutal-yellow/50">Copa do Mundo</p>
             </div>
           </Link>

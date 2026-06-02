@@ -5,7 +5,7 @@ const items = [
   { to: '/', label: 'Jogos', end: true },
   { to: '/ranking', label: 'Ranking' },
   { to: '/groups', label: 'Grupos' },
-  { to: '/history', label: 'Historico' },
+  { to: '/history', label: 'Histórico' },
   { to: '/profile', label: 'Perfil' },
 ];
 

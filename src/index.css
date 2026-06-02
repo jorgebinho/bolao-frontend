@@ -1,6 +1,4 @@
 /* src/index.css */
-@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -53,7 +51,8 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* ─── FONT DISPLAY UTILITY ─────────────────────────────────────────────────── */
 .font-display {
-  font-family: 'Black Han Sans', Impact, sans-serif;
+  font-family: 'Bricolage Grotesque', Impact, sans-serif;
+  font-weight: 800;
 }
 
 .font-body {

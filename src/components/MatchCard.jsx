@@ -316,9 +316,7 @@ export default function MatchCard({ match, onGuessSubmitted }) {
               </div>
             </div>
           ) : (
-            <p className="font-display text-sm">
-              Voce nao palpitou neste jogo.
-            </p>
+            <p className="font-display text-sm">Você não palpitou neste jogo.</p>
           )}
         </div>
       )}
