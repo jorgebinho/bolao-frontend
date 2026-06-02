@@ -26,7 +26,12 @@ export function Button({
       disabled={loading || props.disabled}
       {...props}
     >
-      {loading ? 'CARREGANDO...' : children}
+      {loading ? (
+        <span className="inline-flex items-center gap-2">
+          <span className="h-3 w-3 animate-spin border-2 border-current border-t-transparent" />
+          CARREGANDO...
+        </span>
+      ) : children}
     </button>
   );
 }
@@ -114,13 +119,59 @@ export function LoadingState({ rows = 3, type = 'card' }) {
   return (
     <div className="space-y-3">
       {Array.from({ length: rows }).map((_, index) => (
-        <div
-          key={index}
-          className={`animate-pulse border-4 border-brutal-black bg-brutal-yellow/40 shadow-brutal ${
-            type === 'row' ? 'h-16' : 'h-44'
-          }`}
-        />
+        <SkeletonBlock key={index} type={type} />
       ))}
+    </div>
+  );
+}
+
+export function SkeletonBlock({ type = 'card', className = '' }) {
+  const isRow = type === 'row';
+
+  return (
+    <div
+      className={`overflow-hidden border-4 border-brutal-black bg-brutal-white shadow-brutal ${isRow ? 'h-16' : 'h-44'} ${className}`}
+      aria-hidden="true"
+    >
+      <div className="brutal-skeleton h-full w-full p-4">
+        <div className="mb-4 h-4 w-1/2 bg-brutal-black/15" />
+        <div className="grid h-[calc(100%-2rem)] grid-cols-3 items-center gap-4">
+          <div className="h-12 bg-brutal-black/15" />
+          <div className="h-16 bg-brutal-yellow/70" />
+          <div className="h-12 bg-brutal-black/15" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function DashboardLoadingState() {
+  return (
+    <div className="space-y-5" role="status" aria-live="polite" aria-label="Carregando jogos">
+      <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="brutal-skeleton h-24 border-4 border-brutal-black bg-brutal-white shadow-brutal-sm" />
+          ))}
+        </div>
+        <div className="brutal-skeleton h-40 border-4 border-brutal-black bg-brutal-white shadow-brutal" />
+      </div>
+
+      <Card className="p-3">
+        <div className="flex flex-wrap gap-2">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className="brutal-skeleton h-11 w-28 border-4 border-brutal-black bg-brutal-white" />
+          ))}
+        </div>
+      </Card>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <SkeletonBlock key={index} />
+        ))}
+      </div>
+
+      <span className="sr-only">Carregando jogos e palpites...</span>
     </div>
   );
 }

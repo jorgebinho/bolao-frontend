@@ -5,9 +5,10 @@ import toast from 'react-hot-toast';
 import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import MatchCard from '../components/MatchCard';
-import { Badge, Button, Card, EmptyState, LoadingState, PageHeader, Select, StatCard } from '../components/ui';
+import { Badge, Button, Card, DashboardLoadingState, EmptyState, PageHeader, Select, StatCard } from '../components/ui';
 
 const FILTERS = [
+  { key: 'next-day', label: 'Próximo dia' },
   { key: 'all', label: 'Todos' },
   { key: 'today', label: 'Hoje' },
   { key: 'missing', label: 'Sem palpite' },
@@ -34,6 +35,25 @@ function stageSortValue(stage) {
   const group = String(stage || '').match(/Fase de Grupos - Grupo ([A-L])/i)?.[1];
   if (group) return group.charCodeAt(0) - 64;
   return STAGE_ORDER[stage] || 999;
+}
+
+function dayKey(date) {
+  const value = new Date(date);
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
+}
+
+function getNextMatchDay(matches) {
+  if (!matches.length) return null;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const sorted = matches
+    .slice()
+    .sort((a, b) => new Date(a.matchDate) - new Date(b.matchDate));
+
+  const next = sorted.find((match) => new Date(match.matchDate) >= today) || sorted[0];
+  return dayKey(next.matchDate);
 }
 
 function withGroupRounds(matches) {
@@ -152,7 +172,7 @@ export default function DashboardPage() {
   const { user, refreshUser } = useAuth();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState('next-day');
   const [tournamentPhase, setTournamentPhase] = useState('all');
   const [stage, setStage] = useState('all');
   const [error, setError] = useState('');
@@ -204,21 +224,27 @@ export default function DashboardPage() {
   }, [matches]);
 
   const filtered = useMemo(() => {
-    const filteredMatches = matches.filter((match) => {
-      const matchDate = new Date(match.matchDate);
-      const today = new Date().toDateString() === matchDate.toDateString();
+    const baseMatches = matches.filter((match) => {
       const isGroupStage = match.stage?.startsWith('Fase de Grupos');
       const byTournamentPhase =
         tournamentPhase === 'all' ||
         (tournamentPhase === 'groups' && isGroupStage) ||
         (tournamentPhase === 'knockout' && !isGroupStage);
       const byStage = stage === 'all' || match.stage === stage;
+      return byTournamentPhase && byStage;
+    });
+
+    const nextMatchDay = getNextMatchDay(baseMatches);
+    const filteredMatches = baseMatches.filter((match) => {
+      const matchDate = new Date(match.matchDate);
+      const today = new Date().toDateString() === matchDate.toDateString();
       const byFilter =
         filter === 'all' ||
         match.status === filter ||
         (filter === 'today' && today) ||
+        (filter === 'next-day' && (!nextMatchDay || dayKey(match.matchDate) === nextMatchDay)) ||
         (filter === 'missing' && match.status === 'UPCOMING' && !match.myGuess);
-      return byTournamentPhase && byStage && byFilter;
+      return byFilter;
     });
 
     return withGroupRounds(filteredMatches);
@@ -327,7 +353,7 @@ export default function DashboardPage() {
         )}
 
         {loading ? (
-          <LoadingState rows={4} />
+          <DashboardLoadingState />
         ) : filtered.length === 0 ? (
           <EmptyState
             title="Nenhum jogo encontrado"

@@ -59,3 +59,22 @@ input[type=number] { -moz-appearance: textfield; }
 .font-body {
   font-family: 'Space Grotesk', monospace;
 }
+
+.brutal-skeleton {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 230, 0, 0.75), transparent),
+    #fafafa;
+  background-size: 220% 100%;
+  animation: brutal-skeleton 1.25s linear infinite;
+}
+
+@keyframes brutal-skeleton {
+  from {
+    background-position: 220% 0;
+  }
+  to {
+    background-position: -220% 0;
+  }
+}
