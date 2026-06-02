@@ -1,52 +1,56 @@
-import { useEffect, useState } from 'react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import toast from 'react-hot-toast';
-import api from '../lib/api';
-import { Badge, Button } from './ui';
+import { useEffect, useState } from "react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import toast from "react-hot-toast";
+import api from "../lib/api";
+import { Badge, Button } from "./ui";
 
 const STATUS = {
-  UPCOMING: { label: 'Aberto', tone: 'success' },
-  LOCKED: { label: 'Fechado', tone: 'warning' },
-  FINISHED: { label: 'Finalizado', tone: 'dark' },
+  UPCOMING: { label: "Aberto", tone: "success" },
+  LOCKED: { label: "Fechado", tone: "warning" },
+  FINISHED: { label: "Finalizado", tone: "dark" },
 };
 
 function pointsClass(points) {
-  if (points === 3) return 'bg-brutal-green text-brutal-black';
-  if (points === 1) return 'bg-brutal-yellow text-brutal-black';
-  return 'bg-brutal-white text-brutal-black';
+  if (points === 3) return "bg-brutal-green text-brutal-black";
+  if (points === 1) return "bg-brutal-yellow text-brutal-black";
+  return "bg-brutal-white text-brutal-black";
 }
 
 function stageHeaderClass(stage) {
-  const group = String(stage || '').match(/Grupo\s+([A-L])/i)?.[1]?.toUpperCase();
+  const group = String(stage || "")
+    .match(/Grupo\s+([A-L])/i)?.[1]
+    ?.toUpperCase();
   const groupColors = {
-    A: 'bg-brutal-yellow text-brutal-black',
-    B: 'bg-brutal-green text-brutal-black',
-    C: 'bg-brutal-blue text-brutal-white',
-    D: 'bg-brutal-orange text-brutal-black',
-    E: 'bg-brutal-pink text-brutal-black',
-    F: 'bg-brutal-purple text-brutal-white',
-    G: 'bg-brutal-red text-brutal-white',
-    H: 'bg-brutal-white text-brutal-black',
-    I: 'bg-brutal-black text-brutal-yellow',
-    J: 'bg-brutal-gray text-brutal-black',
-    K: 'bg-brutal-green text-brutal-black',
-    L: 'bg-brutal-orange text-brutal-black',
+    A: "bg-brutal-yellow text-brutal-black",
+    B: "bg-brutal-green text-brutal-black",
+    C: "bg-brutal-blue text-brutal-white",
+    D: "bg-brutal-orange text-brutal-black",
+    E: "bg-brutal-pink text-brutal-black",
+    F: "bg-brutal-purple text-brutal-white",
+    G: "bg-brutal-red text-brutal-white",
+    H: "bg-brutal-white text-brutal-black",
+    I: "bg-brutal-black text-brutal-yellow",
+    J: "bg-brutal-gray text-brutal-black",
+    K: "bg-brutal-green text-brutal-black",
+    L: "bg-brutal-orange text-brutal-black",
   };
 
   if (group) return groupColors[group] || groupColors.A;
-  return 'bg-brutal-black text-brutal-yellow';
+  return "bg-brutal-black text-brutal-yellow";
 }
 
 function lockCountdownLabel(minutesToLock) {
   const minutes = Number(minutesToLock || 0);
-  if (minutes <= 0) return 'agora';
+  if (minutes <= 0) return "agora";
   if (minutes < 60) return `em ${minutes} min`;
 
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
   if (hours < 24) {
-    return remainingMinutes > 0 ? `em ${hours}h ${remainingMinutes}min` : `em ${hours}h`;
+    return remainingMinutes > 0
+      ? `em ${hours}h ${remainingMinutes}min`
+      : `em ${hours}h`;
   }
 
   const days = Math.floor(hours / 24);
@@ -56,45 +60,129 @@ function lockCountdownLabel(minutesToLock) {
 }
 
 function teamInitial(team) {
-  return String(team || '?').trim().charAt(0).toUpperCase();
+  return String(team || "?")
+    .trim()
+    .charAt(0)
+    .toUpperCase();
 }
 
+const FLAG_MAP = {
+  // Anfitriões
+  "Estados Unidos": "🇺🇸",
+  México: "🇲🇽",
+  Canadá: "🇨🇦",
+  // CONMEBOL
+  Brasil: "🇧🇷",
+  Argentina: "🇦🇷",
+  Colômbia: "🇨🇴",
+  Equador: "🇪🇨",
+  Uruguai: "🇺🇾",
+  Venezuela: "🇻🇪",
+  // UEFA
+  Espanha: "🇪🇸",
+  França: "🇫🇷",
+  Alemanha: "🇩🇪",
+  Inglaterra: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+  Portugal: "🇵🇹",
+  "Países Baixos": "🇳🇱",
+  Bélgica: "🇧🇪",
+  Áustria: "🇦🇹",
+  Hungria: "🇭🇺",
+  Escócia: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+  Turquia: "🇹🇷",
+  Suíça: "🇨🇭",
+  Dinamarca: "🇩🇰",
+  Sérvia: "🇷🇸",
+  Croácia: "🇭🇷",
+  Eslováquia: "🇸🇰",
+  Itália: "🇮🇹",
+  Georgia: "🇬🇪",
+  // AFC
+  Japão: "🇯🇵",
+  "Coreia do Sul": "🇰🇷",
+  Irã: "🇮🇷",
+  Austrália: "🇦🇺",
+  Iraque: "🇮🇶",
+  Jordânia: "🇯🇴",
+  Uzbequistão: "🇺🇿",
+  "Arábia Saudita": "🇸🇦",
+  // CAF
+  Marrocos: "🇲🇦",
+  Egito: "🇪🇬",
+  Senegal: "🇸🇳",
+  Nigéria: "🇳🇬",
+  "África do Sul": "🇿🇦",
+  "Costa do Marfim": "🇨🇮",
+  Argélia: "🇩🇿",
+  Tunísia: "🇹🇳",
+  Camarões: "🇨🇲",
+  Mali: "🇲🇱",
+  // CONCACAF
+  Panamá: "🇵🇦",
+  Honduras: "🇭🇳",
+  Jamaica: "🇯🇲",
+  // OFC
+  "Nova Zelândia": "🇳🇿",
+  // Adicionais / variações de nome
+  "República Tcheca": "🇨🇿",
+  "Bósnia e Herzegovina": "🇧🇦",
+  Paraguai: "🇵🇾",
+  Catar: "🇶🇦",
+  Haiti: "🇭🇹",
+  Curacao: "🇨🇼",
+  Holanda: "🇳🇱",
+  Suecia: "🇸🇪",
+  Suécia: "🇸🇪",
+  "Cabo Verde": "🇨🇻",
+  Noruega: "🇳🇴",
+  "República Democrática do Congo": "🇨🇩",
+  "Republica Democratica do Congo": "🇨🇩",
+  Gana: "🇬🇭",
+};
+
+const flagEmoji = (name) => FLAG_MAP[name] ?? null;
+
 function TeamBlock({ name, flag }) {
+  const emoji = flagEmoji(name);
   return (
     <div className="min-w-0 flex-1 text-center">
       <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center overflow-hidden border-4 border-brutal-black bg-brutal-white shadow-brutal-sm">
         {flag ? (
           <img src={flag} alt={name} className="h-full w-full object-cover" />
+        ) : emoji ? (
+          <span className="text-2xl leading-none">{emoji}</span>
         ) : (
           <span className="font-display text-xl">{teamInitial(name)}</span>
         )}
       </div>
-      <p className="truncate font-display text-sm leading-tight sm:text-base">{name}</p>
+      <p className="truncate font-display text-sm leading-tight sm:text-base">
+        {name}
+      </p>
     </div>
   );
 }
 
 export default function MatchCard({ match, onGuessSubmitted }) {
-  const [homeInput, setHomeInput] = useState('');
-  const [awayInput, setAwayInput] = useState('');
+  const [homeInput, setHomeInput] = useState("");
+  const [awayInput, setAwayInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showGuesses, setShowGuesses] = useState(false);
 
   useEffect(() => {
-    setHomeInput(match.myGuess?.homeGuess ?? '');
-    setAwayInput(match.myGuess?.awayGuess ?? '');
+    setHomeInput(match.myGuess?.homeGuess ?? "");
+    setAwayInput(match.myGuess?.awayGuess ?? "");
   }, [match.id, match.myGuess?.homeGuess, match.myGuess?.awayGuess]);
 
   const matchDate = new Date(match.matchDate);
   const status = STATUS[match.status] || STATUS.UPCOMING;
   const hasGuess = Boolean(match.myGuess);
-  const isFinished = match.status === 'FINISHED';
+  const isFinished = match.status === "FINISHED";
   const isLocked = match.isLocked;
 
   async function handleSubmit(event) {
     event.preventDefault();
-    if (homeInput === '' || awayInput === '') {
-      toast.error('Preencha os dois placares.');
+    if (homeInput === "" || awayInput === "") {
+      toast.error("Preencha os dois placares.");
       return;
     }
 
@@ -104,10 +192,10 @@ export default function MatchCard({ match, onGuessSubmitted }) {
         homeGuess: Number(homeInput),
         awayGuess: Number(awayInput),
       });
-      toast.success(hasGuess ? 'Palpite atualizado.' : 'Palpite registrado.');
+      toast.success(hasGuess ? "Palpite atualizado." : "Palpite registrado.");
       onGuessSubmitted?.();
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Erro ao salvar palpite.');
+      toast.error(err.response?.data?.error || "Erro ao salvar palpite.");
     } finally {
       setSubmitting(false);
     }
@@ -115,11 +203,17 @@ export default function MatchCard({ match, onGuessSubmitted }) {
 
   return (
     <article className="border-4 border-brutal-black bg-brutal-white shadow-brutal">
-      <div className={`flex flex-wrap items-center justify-between gap-2 border-b-4 border-brutal-black px-4 py-3 ${stageHeaderClass(match.stage)}`}>
+      <div
+        className={`flex flex-wrap items-center justify-between gap-2 border-b-4 border-brutal-black px-4 py-3 ${stageHeaderClass(match.stage)}`}
+      >
         <div>
-          <p className="font-display text-xs tracking-wider opacity-75">{match.stage || 'Copa do Mundo 2026'}</p>
+          <p className="font-display text-xs tracking-wider opacity-75">
+            {match.stage || "Copa do Mundo 2026"}
+          </p>
           {match.roundLabel && (
-            <p className="font-display text-xs tracking-wider opacity-90">{match.roundLabel}</p>
+            <p className="font-display text-xs tracking-wider opacity-90">
+              {match.roundLabel}
+            </p>
           )}
           <p className="font-body text-xs font-bold opacity-80">
             {format(matchDate, "dd/MM 'as' HH:mm", { locale: ptBR })}
@@ -141,7 +235,9 @@ export default function MatchCard({ match, onGuessSubmitted }) {
             </div>
           ) : (
             <>
-              <p className="font-display text-3xl leading-none">{format(matchDate, 'HH:mm')}</p>
+              <p className="font-display text-3xl leading-none">
+                {format(matchDate, "HH:mm")}
+              </p>
               <p className="mt-1 text-xs font-bold text-brutal-black/55">
                 Fecha {lockCountdownLabel(match.minutesToLock)}
               </p>
@@ -154,9 +250,17 @@ export default function MatchCard({ match, onGuessSubmitted }) {
       {!isFinished && (
         <div className="border-t-4 border-brutal-black bg-brutal-gray/60 px-4 py-3">
           {isLocked ? (
-            <div className={`flex items-center justify-between border-4 border-brutal-black p-3 ${hasGuess ? 'bg-brutal-black text-brutal-yellow' : 'bg-brutal-red text-brutal-white'}`}>
-              <span className="font-display text-xs tracking-wider">{hasGuess ? 'SEU PALPITE' : 'SEM PALPITE'}</span>
-              {hasGuess && <span className="font-display text-xl">{match.myGuess.homeGuess} x {match.myGuess.awayGuess}</span>}
+            <div
+              className={`flex items-center justify-between border-4 border-brutal-black p-3 ${hasGuess ? "bg-brutal-black text-brutal-yellow" : "bg-brutal-red text-brutal-white"}`}
+            >
+              <span className="font-display text-xs tracking-wider">
+                {hasGuess ? "SEU PALPITE" : "SEM PALPITE"}
+              </span>
+              {hasGuess && (
+                <span className="font-display text-xl">
+                  {match.myGuess.homeGuess} x {match.myGuess.awayGuess}
+                </span>
+              )}
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex items-end gap-2">
@@ -181,8 +285,13 @@ export default function MatchCard({ match, onGuessSubmitted }) {
                   placeholder="0"
                 />
               </div>
-              <Button type="submit" className="h-12 flex-1 px-2" size="sm" loading={submitting}>
-                {hasGuess ? 'SALVAR' : 'PALPITAR'}
+              <Button
+                type="submit"
+                className="h-12 flex-1 px-2"
+                size="sm"
+                loading={submitting}
+              >
+                {hasGuess ? "SALVAR" : "PALPITAR"}
               </Button>
             </form>
           )}
@@ -190,12 +299,16 @@ export default function MatchCard({ match, onGuessSubmitted }) {
       )}
 
       {isFinished && (
-        <div className={`border-t-4 border-brutal-black px-4 py-3 ${pointsClass(match.myGuess?.points || 0)}`}>
+        <div
+          className={`border-t-4 border-brutal-black px-4 py-3 ${pointsClass(match.myGuess?.points || 0)}`}
+        >
           {hasGuess ? (
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-display text-xs">SEU PALPITE</p>
-                <p className="font-display text-xl">{match.myGuess.homeGuess} x {match.myGuess.awayGuess}</p>
+                <p className="font-display text-xl">
+                  {match.myGuess.homeGuess} x {match.myGuess.awayGuess}
+                </p>
               </div>
               <div className="text-right">
                 <p className="font-display text-xs">PONTOS</p>
@@ -216,16 +329,23 @@ export default function MatchCard({ match, onGuessSubmitted }) {
             className="flex w-full items-center justify-between bg-brutal-white px-4 py-3 font-display text-xs tracking-wider hover:bg-brutal-yellow"
           >
             <span>PALPITES ({match.guesses.length})</span>
-            <span>{showGuesses ? 'FECHAR' : 'VER'}</span>
+            <span>{showGuesses ? "FECHAR" : "VER"}</span>
           </button>
           {showGuesses && (
             <div className="max-h-48 overflow-y-auto border-t-2 border-brutal-black">
               {match.guesses.map((guess) => (
-                <div key={guess.id || guess.userId} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 border-b border-brutal-black/10 px-4 py-2 text-sm font-bold">
+                <div
+                  key={guess.id || guess.userId}
+                  className="grid grid-cols-[1fr_auto_auto] items-center gap-3 border-b border-brutal-black/10 px-4 py-2 text-sm font-bold"
+                >
                   <span className="truncate">{guess.userName}</span>
-                  <span className="font-display">{guess.homeGuess} x {guess.awayGuess}</span>
+                  <span className="font-display">
+                    {guess.homeGuess} x {guess.awayGuess}
+                  </span>
                   {isFinished && (
-                    <span className={`border-2 border-brutal-black px-2 py-0.5 font-display text-sm ${pointsClass(guess.points)}`}>
+                    <span
+                      className={`border-2 border-brutal-black px-2 py-0.5 font-display text-sm ${pointsClass(guess.points)}`}
+                    >
                       {guess.points}pt
                     </span>
                   )}

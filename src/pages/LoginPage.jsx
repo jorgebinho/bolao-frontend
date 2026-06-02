@@ -100,7 +100,7 @@ export default function LoginPage() {
                   onChange={handleChange}
                   placeholder="Ex: Ronaldo Fenômeno"
                   required
-                  className="w-full border-4 border-brutal-black p-3 font-body font-bold bg-brutal-yellow placeholder-brutal-black/40 focus:outline-none focus:shadow-brutal transition-shadow"
+                  className="w-full border-4 border-brutal-black p-3 font-body font-bold bg-brutal-white placeholder-brutal-black/40 focus:outline-none focus:shadow-brutal transition-shadow"
                 />
               </div>
             )}

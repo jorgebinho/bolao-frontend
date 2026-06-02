@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const items = [
@@ -10,7 +10,8 @@ const items = [
 ];
 
 export default function BottomNav() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const navItems = user?.role === 'ADMIN' ? [...items, { to: '/admin', label: 'Admin' }] : items;
 
   return (
@@ -30,6 +31,12 @@ export default function BottomNav() {
             {item.label.toUpperCase()}
           </NavLink>
         ))}
+        <button
+          onClick={() => { logout(); navigate('/login'); }}
+          className="min-w-[78px] flex-1 border-r-2 border-brutal-yellow/15 px-2 py-3 text-center font-display text-[10px] tracking-wider text-brutal-red hover:bg-brutal-red hover:text-brutal-black transition-colors"
+        >
+          SAIR
+        </button>
       </div>
     </nav>
   );
