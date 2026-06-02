@@ -1,9 +1,10 @@
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import BottomNav from './BottomNav';
 
 export default function AppLayout() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const navItems = [
     { to: '/', label: 'Jogos', end: true },
     { to: '/ranking', label: 'Ranking' },
@@ -44,10 +45,18 @@ export default function AppLayout() {
             ))}
           </nav>
 
-          <Link to="/profile" className="min-w-0 text-right">
-            <p className="truncate text-xs font-bold text-brutal-yellow/60">{user?.name}</p>
-            <p className="font-display text-lg leading-none text-brutal-yellow">{user?.points || 0} pts</p>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link to="/profile" className="min-w-0 text-right">
+              <p className="truncate text-xs font-bold text-brutal-yellow/60">{user?.name}</p>
+              <p className="font-display text-lg leading-none text-brutal-yellow">{user?.points || 0} pts</p>
+            </Link>
+            <button
+              onClick={() => { logout(); navigate('/login'); }}
+              className="border-2 border-brutal-yellow px-3 py-2 font-display text-xs tracking-wider text-brutal-yellow hover:bg-brutal-yellow hover:text-brutal-black transition-colors"
+            >
+              SAIR
+            </button>
+          </div>
         </div>
       </header>
 
