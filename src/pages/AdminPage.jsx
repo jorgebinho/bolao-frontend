@@ -50,10 +50,10 @@ export default function AdminPage() {
     if (!confirm(`Promover "${userName}" a admin?`)) return;
     try {
       await api.patch(`/admin/users/${userId}/promote`);
-      toast.success(`${userName} agora e admin.`);
+      toast.success(`${userName} agora é admin.`);
       fetchData();
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Erro ao promover usuario.');
+      toast.error(err.response?.data?.error || 'Erro ao promover usuário.');
     }
   }
 
@@ -61,35 +61,35 @@ export default function AdminPage() {
     if (!confirm(`Remover admin de "${userName}"?`)) return;
     try {
       await api.patch(`/admin/users/${userId}/demote`);
-      toast.success(`${userName} agora e usuario comum.`);
+      toast.success(`${userName} agora é usuário comum.`);
       fetchData();
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Erro ao rebaixar usuario.');
+      toast.error(err.response?.data?.error || 'Erro ao rebaixar usuário.');
     }
   }
 
   async function handleDeleteUser(userId, userName) {
-    if (!confirm(`Excluir "${userName}" do bolao?`)) return;
+    if (!confirm(`Excluir "${userName}" do bolão?`)) return;
     try {
       await api.delete(`/admin/users/${userId}`);
-      toast.success('Usuario removido.');
+      toast.success('Usuário removido.');
       fetchData();
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Erro ao remover usuario.');
+      toast.error(err.response?.data?.error || 'Erro ao remover usuário.');
     }
   }
 
   async function saveChampion(event) {
     event.preventDefault();
-    if (!champion.trim()) return toast.error('Informe a selecao campea.');
+    if (!champion.trim()) return toast.error('Informe a seleção campeã.');
 
     setSavingChampion(true);
     try {
       const { data } = await api.post('/admin/champion-result', { champion });
-      toast.success(`Campeao salvo. ${data.processed || 0} palpites processados.`);
+      toast.success(`Campeão salvo. ${data.processed || 0} palpites processados.`);
       setChampion('');
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Erro ao salvar campeao.');
+      toast.error(err.response?.data?.error || 'Erro ao salvar campeão.');
     } finally {
       setSavingChampion(false);
     }
@@ -103,7 +103,7 @@ export default function AdminPage() {
       <PageHeader
         eyebrow={`Admin - ${me?.name || ''}`}
         title="Painel admin"
-        description="Gerencie jogos, usuarios, resultados e o campeao oficial."
+        description="Gerencie jogos, usuários, resultados e o campeão oficial."
       />
 
       <div className="space-y-5 px-4 py-5 sm:px-0">
@@ -111,15 +111,15 @@ export default function AdminPage() {
           <StatCard label="Jogos" value={matches.length} tone="yellow" />
           <StatCard label="Abertos" value={openMatches} tone="green" />
           <StatCard label="Finalizados" value={finishedMatches} tone="white" />
-          <StatCard label="Usuarios" value={users.length} tone="blue" />
+          <StatCard label="Usuários" value={users.length} tone="blue" />
         </div>
 
         <Card className="p-3">
           <div className="flex gap-2 overflow-x-auto">
             {[
               ['matches', `Jogos (${matches.length})`],
-              ['users', `Usuarios (${users.length})`],
-              ['champion', 'Campeao'],
+              ['users', `Usuários (${users.length})`],
+              ['champion', 'Campeão'],
             ].map(([key, label]) => (
               <button
                 key={key}
@@ -171,7 +171,7 @@ export default function AdminPage() {
             {loading ? (
               <LoadingState rows={4} type="row" />
             ) : users.length === 0 ? (
-              <EmptyState title="Nenhum usuario" description="Usuarios cadastrados aparecem aqui." />
+              <EmptyState title="Nenhum usuário" description="Usuários cadastrados aparecem aqui." />
             ) : (
               users.map((user) => (
                 <Card key={user.id} className={`p-4 ${user.role === 'ADMIN' ? 'bg-brutal-yellow' : ''}`}>
@@ -180,7 +180,7 @@ export default function AdminPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="truncate font-display text-lg">{user.name}</p>
                         {user.role === 'ADMIN' && <Badge tone="dark">ADMIN</Badge>}
-                        {user.id === me?.id && <Badge tone="info">VOCE</Badge>}
+                        {user.id === me?.id && <Badge tone="info">VOCÊ</Badge>}
                       </div>
                       <p className="truncate text-xs font-bold text-brutal-black/50">{user.email}</p>
                       <p className="mt-1 text-sm font-bold">
@@ -206,13 +206,13 @@ export default function AdminPage() {
 
         {tab === 'champion' && (
           <Card className="p-4">
-            <h2 className="font-display text-xl">Campeao oficial</h2>
+            <h2 className="font-display text-xl">Campeão oficial</h2>
             <p className="mt-1 text-sm font-bold text-brutal-black/60">
-              Ao salvar, o backend marca quem acertou o campeao e adiciona os pontos extras no ranking calculado.
+              Ao salvar, o backend marca quem acertou o campeão e adiciona os pontos extras no ranking calculado.
             </p>
             <form onSubmit={saveChampion} className="mt-4 flex flex-col gap-3 sm:flex-row">
               <Input value={champion} onChange={(event) => setChampion(event.target.value)} placeholder="Brasil" className="sm:min-w-[280px]" />
-              <Button type="submit" variant="success" loading={savingChampion}>SALVAR CAMPEAO</Button>
+              <Button type="submit" variant="success" loading={savingChampion}>SALVAR CAMPEÃO</Button>
             </form>
           </Card>
         )}

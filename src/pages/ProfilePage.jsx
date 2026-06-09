@@ -67,12 +67,12 @@ export default function ProfilePage() {
 
   return (
     <div>
-      <PageHeader eyebrow="sua conta" title="Perfil" description="Veja estatisticas, historico recente e ajustes da conta." />
+      <PageHeader eyebrow="sua conta" title="Perfil" description="Veja estatísticas, histórico recente e ajustes da conta." />
       <div className="space-y-5 px-4 py-5 sm:px-0">
         {loading ? (
           <LoadingState rows={4} type="row" />
         ) : !profile ? (
-          <EmptyState title="Perfil indisponivel" description="Nao foi possivel carregar seus dados." />
+          <EmptyState title="Perfil indisponível" description="Não foi possível carregar seus dados." />
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -83,7 +83,7 @@ export default function ProfilePage() {
               <StatCard label="Exatos" value={profile.exactScores} tone="green" />
               <StatCard label="Parciais" value={profile.partialScores} tone="orange" />
               <StatCard label="Erros" value={profile.errors} tone="white" />
-              <StatCard label="Campeao extra" value={profile.championPoints} tone="black" />
+              <StatCard label="Campeão extra" value={profile.championPoints} tone="black" />
             </div>
 
             <div className="grid gap-5 lg:grid-cols-[1fr_1fr]">
@@ -97,7 +97,7 @@ export default function ProfilePage() {
               </Card>
 
               <Card className="p-4">
-                <h2 className="font-display text-xl">Seguranca</h2>
+                <h2 className="font-display text-xl">Segurança</h2>
                 <form onSubmit={savePassword} className="mt-4 space-y-3">
                   <Input label="SENHA ATUAL" type="password" value={passwords.currentPassword} onChange={(event) => setPasswords((form) => ({ ...form, currentPassword: event.target.value }))} />
                   <Input label="NOVA SENHA" type="password" value={passwords.newPassword} onChange={(event) => setPasswords((form) => ({ ...form, newPassword: event.target.value }))} />
@@ -111,7 +111,7 @@ export default function ProfilePage() {
 
             <Card className="overflow-hidden">
               <div className="border-b-4 border-brutal-black bg-brutal-yellow p-4">
-                <h2 className="font-display text-xl">Historico recente</h2>
+                <h2 className="font-display text-xl">Histórico recente</h2>
               </div>
               {profile.recentGuesses.length === 0 ? (
                 <div className="p-4"><EmptyState title="Sem palpites recentes" description="Seus palpites aparecem aqui depois de salvos." /></div>

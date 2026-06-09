@@ -20,7 +20,7 @@ export default function LoginPage() {
     try {
       if (isRegister) {
         await register(form.name, form.email, form.password);
-        toast.success("Conta criada! Bem-vindo ao bolao!");
+        toast.success("Conta criada! Bem-vindo ao bolão!");
       } else {
         await login(form.email, form.password);
         toast.success("Login feito! Boa sorte!");
@@ -50,7 +50,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="inline-block bg-brutal-black text-brutal-yellow px-4 py-2 border-4 border-brutal-black shadow-brutal-yellow mb-4 rotate-[-1deg]">
             <span className="font-display text-2xl tracking-wider">
-              BOLAO
+              BOLÃO
             </span>
           </div>
           <h1 className="font-display text-5xl text-brutal-black leading-tight">
@@ -59,7 +59,7 @@ export default function LoginPage() {
             MUNDO
           </h1>
           <p className="font-body text-brutal-black font-bold mt-1 opacity-60">
-            Quem vai ser campeao?
+            Quem vai ser campeão?
           </p>
         </div>
 
@@ -98,9 +98,9 @@ export default function LoginPage() {
                   name="name"
                   value={form.name}
                   onChange={handleChange}
-                  placeholder="Ex: Ronaldo Fenomeno"
+                  placeholder="Ex: Ronaldo Fenômeno"
                   required
-                  className="w-full border-4 border-brutal-black p-3 font-body font-bold bg-brutal-yellow placeholder-brutal-black/40 focus:outline-none focus:shadow-brutal transition-shadow"
+                  className="w-full border-4 border-brutal-black p-3 font-body font-bold bg-brutal-white placeholder-brutal-black/40 focus:outline-none focus:shadow-brutal transition-shadow"
                 />
               </div>
             )}
@@ -143,14 +143,14 @@ export default function LoginPage() {
               {loading
                 ? "..."
                 : isRegister
-                  ? "ENTRAR NO BOLAO"
+                  ? "ENTRAR NO BOLÃO"
                   : "FAZER LOGIN"}
             </button>
           </form>
         </div>
 
         <p className="text-center font-body text-brutal-black/60 text-sm mt-4 font-bold">
-          Copao Enterprises LTDA - {new Date().getFullYear()}
+          Copão Enterprises LTDA - {new Date().getFullYear()}
         </p>
       </div>
     </div>

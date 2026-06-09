@@ -23,7 +23,7 @@ export default {
 
       // ─── TIPOGRAFIA ────────────────────────────────────────────────────
       fontFamily: {
-        display: ['"Black Han Sans"', 'Impact', 'sans-serif'],
+        display: ['"Bricolage Grotesque"', 'Impact', 'sans-serif'],
         body:    ['"Space Grotesk"', 'monospace'],
         mono:    ['"JetBrains Mono"', 'monospace'],
       },
