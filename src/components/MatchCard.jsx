@@ -202,6 +202,57 @@ const TEAM_COUNTRY_CODES = {
   venezuela: "VE",
 };
 
+const FIFA_COUNTRY_CODES = {
+  ALG: "DZ",
+  ARG: "AR",
+  AUS: "AU",
+  AUT: "AT",
+  BEL: "BE",
+  BIH: "BA",
+  BRA: "BR",
+  CAN: "CA",
+  CIV: "CI",
+  COD: "CD",
+  COL: "CO",
+  CPV: "CV",
+  CRO: "HR",
+  CUR: "CW",
+  CZE: "CZ",
+  ECU: "EC",
+  EGY: "EG",
+  ENG: "GB",
+  ESP: "ES",
+  FRA: "FR",
+  GER: "DE",
+  GHA: "GH",
+  HAI: "HT",
+  IRN: "IR",
+  IRQ: "IQ",
+  JOR: "JO",
+  JPN: "JP",
+  KOR: "KR",
+  KSA: "SA",
+  MAR: "MA",
+  MEX: "MX",
+  NED: "NL",
+  NOR: "NO",
+  NZL: "NZ",
+  PAN: "PA",
+  PAR: "PY",
+  POR: "PT",
+  QAT: "QA",
+  RSA: "ZA",
+  SCO: "GB",
+  SEN: "SN",
+  SUI: "CH",
+  SWE: "SE",
+  TUN: "TN",
+  TUR: "TR",
+  URU: "UY",
+  USA: "US",
+  UZB: "UZ",
+};
+
 function normalizeTeamName(name) {
   return String(name || "")
     .normalize("NFD")
@@ -221,6 +272,14 @@ function isImageFlag(flag) {
   return /^https?:\/\//i.test(flag) || /^data:image\//i.test(flag);
 }
 
+function flagValueToEmoji(flag) {
+  const value = String(flag || "").trim();
+  if (/^[a-z]{2}$/i.test(value)) return countryCodeToFlag(value);
+
+  const countryCode = FIFA_COUNTRY_CODES[value.toUpperCase()];
+  return countryCode ? countryCodeToFlag(countryCode) : null;
+}
+
 const flagEmoji = (name) => {
   const countryCode = TEAM_COUNTRY_CODES[normalizeTeamName(name)];
   return countryCode ? countryCodeToFlag(countryCode) : FLAG_MAP[name] ?? null;
@@ -228,7 +287,7 @@ const flagEmoji = (name) => {
 
 function TeamBlock({ name, flag }) {
   const emoji = flagEmoji(name);
-  const flagText = flag && !isImageFlag(flag) ? flag : emoji;
+  const flagText = flagValueToEmoji(flag) || emoji || (flag && !isImageFlag(flag) ? flag : null);
   return (
     <div className="min-w-0 flex-1 text-center">
       <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center overflow-hidden border-4 border-brutal-black bg-brutal-white shadow-brutal-sm">
