@@ -140,17 +140,102 @@ const FLAG_MAP = {
   Gana: "🇬🇭",
 };
 
-const flagEmoji = (name) => FLAG_MAP[name] ?? null;
+const TEAM_COUNTRY_CODES = {
+  "africa do sul": "ZA",
+  alemanha: "DE",
+  argelia: "DZ",
+  argentina: "AR",
+  "arabia saudita": "SA",
+  australia: "AU",
+  austria: "AT",
+  belgica: "BE",
+  "bosnia e herzegovina": "BA",
+  brasil: "BR",
+  canada: "CA",
+  "cabo verde": "CV",
+  camaroes: "CM",
+  catar: "QA",
+  colombia: "CO",
+  "coreia do sul": "KR",
+  "costa do marfim": "CI",
+  croacia: "HR",
+  curacao: "CW",
+  dinamarca: "DK",
+  egito: "EG",
+  equador: "EC",
+  escocia: "GB",
+  eslovaquia: "SK",
+  espanha: "ES",
+  "estados unidos": "US",
+  franca: "FR",
+  gana: "GH",
+  georgia: "GE",
+  haiti: "HT",
+  holanda: "NL",
+  hungria: "HU",
+  inglaterra: "GB",
+  ira: "IR",
+  iraque: "IQ",
+  italia: "IT",
+  jamaica: "JM",
+  japao: "JP",
+  jordania: "JO",
+  marrocos: "MA",
+  mexico: "MX",
+  nigeria: "NG",
+  noruega: "NO",
+  "nova zelandia": "NZ",
+  "paises baixos": "NL",
+  panama: "PA",
+  paraguai: "PY",
+  portugal: "PT",
+  "republica democratica do congo": "CD",
+  "republica tcheca": "CZ",
+  senegal: "SN",
+  servia: "RS",
+  suecia: "SE",
+  suica: "CH",
+  tunisia: "TN",
+  turquia: "TR",
+  uruguai: "UY",
+  uzbequistao: "UZ",
+  venezuela: "VE",
+};
+
+function normalizeTeamName(name) {
+  return String(name || "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function countryCodeToFlag(countryCode) {
+  return countryCode
+    .toUpperCase()
+    .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
+}
+
+function isImageFlag(flag) {
+  return /^https?:\/\//i.test(flag) || /^data:image\//i.test(flag);
+}
+
+const flagEmoji = (name) => {
+  const countryCode = TEAM_COUNTRY_CODES[normalizeTeamName(name)];
+  return countryCode ? countryCodeToFlag(countryCode) : FLAG_MAP[name] ?? null;
+};
 
 function TeamBlock({ name, flag }) {
   const emoji = flagEmoji(name);
+  const flagText = flag && !isImageFlag(flag) ? flag : emoji;
   return (
     <div className="min-w-0 flex-1 text-center">
       <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center overflow-hidden border-4 border-brutal-black bg-brutal-white shadow-brutal-sm">
-        {flag ? (
+        {flag && isImageFlag(flag) ? (
           <img src={flag} alt={name} className="h-full w-full object-cover" />
-        ) : emoji ? (
-          <span className="text-2xl leading-none">{emoji}</span>
+        ) : flagText ? (
+          <span className="text-2xl leading-none">{flagText}</span>
         ) : (
           <span className="font-display text-xl">{teamInitial(name)}</span>
         )}
