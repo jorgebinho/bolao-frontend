@@ -262,37 +262,38 @@ function normalizeTeamName(name) {
     .trim();
 }
 
-function countryCodeToFlag(countryCode) {
-  return countryCode
-    .toUpperCase()
-    .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
+function countryCodeToFlagUrl(countryCode) {
+  return `https://flagcdn.com/w80/${countryCode.toLowerCase()}.png`;
 }
 
 function isImageFlag(flag) {
   return /^https?:\/\//i.test(flag) || /^data:image\//i.test(flag);
 }
 
-function flagValueToEmoji(flag) {
+function flagValueToImage(flag) {
   const value = String(flag || "").trim();
-  if (/^[a-z]{2}$/i.test(value)) return countryCodeToFlag(value);
+  if (/^[a-z]{2}$/i.test(value)) return countryCodeToFlagUrl(value);
 
   const countryCode = FIFA_COUNTRY_CODES[value.toUpperCase()];
-  return countryCode ? countryCodeToFlag(countryCode) : null;
+  return countryCode ? countryCodeToFlagUrl(countryCode) : null;
 }
 
-const flagEmoji = (name) => {
+const teamFlagImage = (name) => {
   const countryCode = TEAM_COUNTRY_CODES[normalizeTeamName(name)];
-  return countryCode ? countryCodeToFlag(countryCode) : FLAG_MAP[name] ?? null;
+  return countryCode ? countryCodeToFlagUrl(countryCode) : null;
 };
 
 function TeamBlock({ name, flag }) {
-  const emoji = flagEmoji(name);
-  const flagText = flagValueToEmoji(flag) || emoji || (flag && !isImageFlag(flag) ? flag : null);
+  const flagImage =
+    (flag && isImageFlag(flag) ? flag : null) ||
+    flagValueToImage(flag) ||
+    teamFlagImage(name);
+  const flagText = flag && !isImageFlag(flag) && !flagValueToImage(flag) ? flag : null;
   return (
     <div className="min-w-0 flex-1 text-center">
       <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center overflow-hidden border-4 border-brutal-black bg-brutal-white shadow-brutal-sm">
-        {flag && isImageFlag(flag) ? (
-          <img src={flag} alt={name} className="h-full w-full object-cover" />
+        {flagImage ? (
+          <img src={flagImage} alt={name} className="h-full w-full object-cover" />
         ) : flagText ? (
           <span className="text-2xl leading-none">{flagText}</span>
         ) : (
