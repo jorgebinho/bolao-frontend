@@ -17,6 +17,10 @@ export default function AdminPage() {
   const [showModal, setShowModal] = useState(false);
   const [champion, setChampion] = useState('');
   const [savingChampion, setSavingChampion] = useState(false);
+  const [passwordUserId, setPasswordUserId] = useState('');
+  const [passwordValue, setPasswordValue] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -76,6 +80,30 @@ export default function AdminPage() {
       fetchData();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Erro ao remover usuário.');
+    }
+  }
+
+  function openPasswordEditor(userId) {
+    setPasswordUserId((current) => current === userId ? '' : userId);
+    setPasswordValue('');
+    setShowPassword(false);
+  }
+
+  async function handleResetPassword(userId, userName) {
+    if (passwordValue.length < 6) return toast.error('A nova senha deve ter pelo menos 6 caracteres.');
+    if (!confirm(`Redefinir a senha de "${userName}"? A senha antiga não poderá ser recuperada.`)) return;
+
+    setSavingPassword(true);
+    try {
+      await api.patch(`/admin/users/${userId}/password`, { password: passwordValue });
+      toast.success(`Senha de ${userName} redefinida.`);
+      setPasswordUserId('');
+      setPasswordValue('');
+      setShowPassword(false);
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erro ao redefinir senha.');
+    } finally {
+      setSavingPassword(false);
     }
   }
 
@@ -186,6 +214,7 @@ export default function AdminPage() {
                       <p className="mt-1 text-sm font-bold">
                         {user.points} pts - {user._count?.guesses || 0} palpites - {user._count?.groupMemberships || 0} grupos
                       </p>
+                      <p className="mt-1 text-xs font-bold text-brutal-black/55">Senha: ********</p>
                     </div>
                     {user.id !== me?.id && (
                       <div className="flex flex-col gap-2">
@@ -194,10 +223,35 @@ export default function AdminPage() {
                         ) : (
                           <Button size="sm" variant="warning" onClick={() => handleDemoteUser(user.id, user.name)}>USER</Button>
                         )}
+                        <Button size="sm" variant="secondary" onClick={() => openPasswordEditor(user.id)}>SENHA</Button>
                         <Button size="sm" variant="danger" onClick={() => handleDeleteUser(user.id, user.name)}>EXCLUIR</Button>
                       </div>
                     )}
                   </div>
+                  {passwordUserId === user.id && (
+                    <div className="mt-4 border-t-4 border-brutal-black pt-4">
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <Input
+                          type={showPassword ? 'text' : 'password'}
+                          value={passwordValue}
+                          onChange={(event) => setPasswordValue(event.target.value)}
+                          placeholder="Nova senha"
+                          className="sm:min-w-[220px]"
+                        />
+                        <Button type="button" variant="warning" onClick={() => setShowPassword((value) => !value)}>
+                          {showPassword ? 'OCULTAR' : 'VER'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="success"
+                          loading={savingPassword}
+                          onClick={() => handleResetPassword(user.id, user.name)}
+                        >
+                          SALVAR
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </Card>
               ))
             )}
