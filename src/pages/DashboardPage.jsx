@@ -151,7 +151,7 @@ function ChampionCard() {
           <option value="">Seleção campeã</option>
           {teams.map((item) => (
             <option key={item.id} value={item.name}>
-              Grupo {item.group} - {item.name}
+              {item.name}
             </option>
           ))}
         </Select>

@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import AdminMatchModal from '../components/AdminMatchModal';
-import { Badge, Button, Card, EmptyState, Input, LoadingState, PageHeader, StatCard } from '../components/ui';
+import { Badge, Button, Card, EmptyState, LoadingState, PageHeader, Select, StatCard } from '../components/ui';
 
 export default function AdminPage() {
   const { user: me } = useAuth();
@@ -16,17 +16,24 @@ export default function AdminPage() {
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [champion, setChampion] = useState('');
+  const [currentChampion, setCurrentChampion] = useState('');
+  const [teams, setTeams] = useState([]);
   const [savingChampion, setSavingChampion] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [matchesRes, usersRes] = await Promise.all([
+      const [matchesRes, usersRes, teamsRes, championRes] = await Promise.all([
         api.get('/matches'),
         api.get('/admin/users'),
+        api.get('/matches/teams'),
+        api.get('/champion-guess'),
       ]);
       setMatches(matchesRes.data.matches || []);
       setUsers(usersRes.data.users || []);
+      setTeams(teamsRes.data.teams || []);
+      setCurrentChampion(championRes.data.officialChampion || '');
+      setChampion(championRes.data.officialChampion || '');
     } catch {
       toast.error('Erro ao carregar dados do admin.');
     } finally {
@@ -82,14 +89,20 @@ export default function AdminPage() {
   async function saveChampion(event) {
     event.preventDefault();
     if (!champion.trim()) return toast.error('Informe a seleção campeã.');
+    const action = currentChampion ? 'alterar' : 'salvar';
+    const message = currentChampion
+      ? `Alterar campeão oficial de "${currentChampion}" para "${champion}"? Isso recalcula os pontos extras.`
+      : `Salvar "${champion}" como campeão oficial? Isso recalcula os pontos extras.`;
+
+    if (!confirm(message)) return;
 
     setSavingChampion(true);
     try {
       const { data } = await api.post('/admin/champion-result', { champion });
       toast.success(`Campeão salvo. ${data.processed || 0} palpites processados.`);
-      setChampion('');
+      setCurrentChampion(data.champion || champion);
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Erro ao salvar campeão.');
+      toast.error(err.response?.data?.error || `Erro ao ${action} campeão.`);
     } finally {
       setSavingChampion(false);
     }
@@ -210,9 +223,23 @@ export default function AdminPage() {
             <p className="mt-1 text-sm font-bold text-brutal-black/60">
               Ao salvar, o backend marca quem acertou o campeão e adiciona os pontos extras no ranking calculado.
             </p>
+            {currentChampion && (
+              <p className="mt-3 border-4 border-brutal-black bg-brutal-green p-3 text-sm font-bold">
+                Campeão oficial atual: {currentChampion}
+              </p>
+            )}
             <form onSubmit={saveChampion} className="mt-4 flex flex-col gap-3 sm:flex-row">
-              <Input value={champion} onChange={(event) => setChampion(event.target.value)} placeholder="Brasil" className="sm:min-w-[280px]" />
-              <Button type="submit" variant="success" loading={savingChampion}>SALVAR CAMPEÃO</Button>
+              <Select value={champion} onChange={(event) => setChampion(event.target.value)} className="sm:min-w-[280px]">
+                <option value="">Selecione a equipe</option>
+                {teams.map((team) => (
+                  <option key={team.id} value={team.name}>
+                    {team.name}
+                  </option>
+                ))}
+              </Select>
+              <Button type="submit" variant="success" loading={savingChampion}>
+                {currentChampion ? 'ALTERAR CAMPEÃO' : 'SALVAR CAMPEÃO'}
+              </Button>
             </form>
           </Card>
         )}
