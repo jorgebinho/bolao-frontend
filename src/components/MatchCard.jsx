@@ -140,17 +140,162 @@ const FLAG_MAP = {
   Gana: "🇬🇭",
 };
 
-const flagEmoji = (name) => FLAG_MAP[name] ?? null;
+const TEAM_COUNTRY_CODES = {
+  "africa do sul": "ZA",
+  alemanha: "DE",
+  argelia: "DZ",
+  argentina: "AR",
+  "arabia saudita": "SA",
+  australia: "AU",
+  austria: "AT",
+  belgica: "BE",
+  "bosnia e herzegovina": "BA",
+  brasil: "BR",
+  canada: "CA",
+  "cabo verde": "CV",
+  camaroes: "CM",
+  catar: "QA",
+  colombia: "CO",
+  "coreia do sul": "KR",
+  "costa do marfim": "CI",
+  croacia: "HR",
+  curacao: "CW",
+  dinamarca: "DK",
+  egito: "EG",
+  equador: "EC",
+  escocia: "GB",
+  eslovaquia: "SK",
+  espanha: "ES",
+  "estados unidos": "US",
+  franca: "FR",
+  gana: "GH",
+  georgia: "GE",
+  haiti: "HT",
+  holanda: "NL",
+  hungria: "HU",
+  inglaterra: "GB",
+  ira: "IR",
+  iraque: "IQ",
+  italia: "IT",
+  jamaica: "JM",
+  japao: "JP",
+  jordania: "JO",
+  marrocos: "MA",
+  mexico: "MX",
+  nigeria: "NG",
+  noruega: "NO",
+  "nova zelandia": "NZ",
+  "paises baixos": "NL",
+  panama: "PA",
+  paraguai: "PY",
+  portugal: "PT",
+  "republica democratica do congo": "CD",
+  "republica tcheca": "CZ",
+  senegal: "SN",
+  servia: "RS",
+  suecia: "SE",
+  suica: "CH",
+  tunisia: "TN",
+  turquia: "TR",
+  uruguai: "UY",
+  uzbequistao: "UZ",
+  venezuela: "VE",
+};
+
+const FIFA_COUNTRY_CODES = {
+  ALG: "DZ",
+  ARG: "AR",
+  AUS: "AU",
+  AUT: "AT",
+  BEL: "BE",
+  BIH: "BA",
+  BRA: "BR",
+  CAN: "CA",
+  CIV: "CI",
+  COD: "CD",
+  COL: "CO",
+  CPV: "CV",
+  CRO: "HR",
+  CUR: "CW",
+  CZE: "CZ",
+  ECU: "EC",
+  EGY: "EG",
+  ENG: "GB",
+  ESP: "ES",
+  FRA: "FR",
+  GER: "DE",
+  GHA: "GH",
+  HAI: "HT",
+  IRN: "IR",
+  IRQ: "IQ",
+  JOR: "JO",
+  JPN: "JP",
+  KOR: "KR",
+  KSA: "SA",
+  MAR: "MA",
+  MEX: "MX",
+  NED: "NL",
+  NOR: "NO",
+  NZL: "NZ",
+  PAN: "PA",
+  PAR: "PY",
+  POR: "PT",
+  QAT: "QA",
+  RSA: "ZA",
+  SCO: "GB",
+  SEN: "SN",
+  SUI: "CH",
+  SWE: "SE",
+  TUN: "TN",
+  TUR: "TR",
+  URU: "UY",
+  USA: "US",
+  UZB: "UZ",
+};
+
+function normalizeTeamName(name) {
+  return String(name || "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function countryCodeToFlagUrl(countryCode) {
+  return `https://flagcdn.com/w80/${countryCode.toLowerCase()}.png`;
+}
+
+function isImageFlag(flag) {
+  return /^https?:\/\//i.test(flag) || /^data:image\//i.test(flag);
+}
+
+function flagValueToImage(flag) {
+  const value = String(flag || "").trim();
+  if (/^[a-z]{2}$/i.test(value)) return countryCodeToFlagUrl(value);
+
+  const countryCode = FIFA_COUNTRY_CODES[value.toUpperCase()];
+  return countryCode ? countryCodeToFlagUrl(countryCode) : null;
+}
+
+const teamFlagImage = (name) => {
+  const countryCode = TEAM_COUNTRY_CODES[normalizeTeamName(name)];
+  return countryCode ? countryCodeToFlagUrl(countryCode) : null;
+};
 
 function TeamBlock({ name, flag }) {
-  const emoji = flagEmoji(name);
+  const flagImage =
+    (flag && isImageFlag(flag) ? flag : null) ||
+    flagValueToImage(flag) ||
+    teamFlagImage(name);
+  const flagText = flag && !isImageFlag(flag) && !flagValueToImage(flag) ? flag : null;
   return (
     <div className="min-w-0 flex-1 text-center">
       <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center overflow-hidden border-4 border-brutal-black bg-brutal-white shadow-brutal-sm">
-        {flag ? (
-          <img src={flag} alt={name} className="h-full w-full object-cover" />
-        ) : emoji ? (
-          <span className="text-2xl leading-none">{emoji}</span>
+        {flagImage ? (
+          <img src={flagImage} alt={name} className="h-full w-full object-cover" />
+        ) : flagText ? (
+          <span className="text-2xl leading-none">{flagText}</span>
         ) : (
           <span className="font-display text-xl">{teamInitial(name)}</span>
         )}
