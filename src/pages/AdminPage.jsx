@@ -5,7 +5,14 @@ import toast from 'react-hot-toast';
 import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import AdminMatchModal from '../components/AdminMatchModal';
-import { Badge, Button, Card, EmptyState, LoadingState, PageHeader, Select, StatCard } from '../components/ui';
+import { Badge, Button, Card, EmptyState, Input, LoadingState, PageHeader, Select, StatCard } from '../components/ui';
+
+function generateTemporaryPassword() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+  const bytes = new Uint32Array(10);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (value) => alphabet[value % alphabet.length]).join('');
+}
 
 export default function AdminPage() {
   const { user: me } = useAuth();
@@ -94,6 +101,23 @@ export default function AdminPage() {
     setPasswordUserId((current) => current === userId ? '' : userId);
     setPasswordValue('');
     setShowPassword(false);
+  }
+
+  function handleGenerateTemporaryPassword(userId) {
+    setPasswordUserId(userId);
+    setPasswordValue(generateTemporaryPassword());
+    setShowPassword(true);
+  }
+
+  async function handleCopyPassword() {
+    if (!passwordValue) return toast.error('Gere ou informe uma senha primeiro.');
+
+    try {
+      await navigator.clipboard.writeText(passwordValue);
+      toast.success('Senha copiada.');
+    } catch {
+      toast.error('Não foi possível copiar a senha.');
+    }
   }
 
   async function handleResetPassword(userId, userName) {
@@ -243,16 +267,36 @@ export default function AdminPage() {
                   </div>
                   {passwordUserId === user.id && (
                     <div className="mt-4 border-t-4 border-brutal-black pt-4">
+                      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                          <p className="font-display text-sm tracking-wider">REDEFINIR SENHA</p>
+                          <p className="text-xs font-bold text-brutal-black/60">
+                            Gere uma temporária ou informe uma senha manualmente.
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => handleGenerateTemporaryPassword(user.id)}
+                        >
+                          GERAR TEMPORÁRIA
+                        </Button>
+                      </div>
                       <div className="flex flex-col gap-2 sm:flex-row">
                         <Input
+                          label="NOVA SENHA"
                           type={showPassword ? 'text' : 'password'}
                           value={passwordValue}
                           onChange={(event) => setPasswordValue(event.target.value)}
-                          placeholder="Nova senha"
+                          placeholder="Mínimo 6 caracteres"
                           className="sm:min-w-[220px]"
                         />
                         <Button type="button" variant="warning" onClick={() => setShowPassword((value) => !value)}>
                           {showPassword ? 'OCULTAR' : 'VER'}
+                        </Button>
+                        <Button type="button" variant="secondary" onClick={handleCopyPassword}>
+                          COPIAR
                         </Button>
                         <Button
                           type="button"
