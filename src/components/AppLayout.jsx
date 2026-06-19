@@ -1,9 +1,10 @@
+import { useEffect } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import BottomNav from './BottomNav';
 
 export default function AppLayout() {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
   const navItems = [
     { to: '/', label: 'Jogos', end: true },
@@ -13,6 +14,10 @@ export default function AppLayout() {
     { to: '/profile', label: 'Perfil' },
     ...(user?.role === 'ADMIN' ? [{ to: '/admin', label: 'Admin' }] : []),
   ];
+
+  useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
 
   return (
     <div className="min-h-screen bg-brutal-gray text-brutal-black">

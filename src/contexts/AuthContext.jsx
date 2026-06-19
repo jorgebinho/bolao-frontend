@@ -8,6 +8,19 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const persistUser = useCallback((nextUser) => {
+    setUser(nextUser);
+    localStorage.setItem('@bolao:user', JSON.stringify(nextUser));
+  }, []);
+
+  const syncUser = useCallback((userData) => {
+    setUser((currentUser) => {
+      const nextUser = { ...(currentUser || {}), ...userData };
+      localStorage.setItem('@bolao:user', JSON.stringify(nextUser));
+      return nextUser;
+    });
+  }, []);
+
   // Restaura sessão do localStorage
   useEffect(() => {
     const token = localStorage.getItem('@bolao:token');
@@ -27,18 +40,16 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (email, password) => {
     const { data } = await api.post('/auth/login', { email, password });
     localStorage.setItem('@bolao:token', data.token);
-    localStorage.setItem('@bolao:user', JSON.stringify(data.user));
-    setUser(data.user);
+    persistUser(data.user);
     return data.user;
-  }, []);
+  }, [persistUser]);
 
   const register = useCallback(async (name, email, password) => {
     const { data } = await api.post('/auth/register', { name, email, password });
     localStorage.setItem('@bolao:token', data.token);
-    localStorage.setItem('@bolao:user', JSON.stringify(data.user));
-    setUser(data.user);
+    persistUser(data.user);
     return data.user;
-  }, []);
+  }, [persistUser]);
 
   const logout = useCallback(() => {
     localStorage.removeItem('@bolao:token');
@@ -49,14 +60,19 @@ export function AuthProvider({ children }) {
   // Atualiza dados do usuário localmente (ex: após ganhar pontos)
   const refreshUser = useCallback(async () => {
     try {
-      const { data } = await api.get('/auth/me');
-      setUser(data.user);
-      localStorage.setItem('@bolao:user', JSON.stringify(data.user));
+      const { data } = await api.get('/users/me/profile');
+      persistUser({
+        id: data.profile.id,
+        name: data.profile.name,
+        email: data.profile.email,
+        role: data.profile.role,
+        points: data.profile.totalPoints,
+      });
     } catch { /* Silencia erros de refresh */ }
-  }, []);
+  }, [persistUser]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser, syncUser }}>
       {children}
     </AuthContext.Provider>
   );
