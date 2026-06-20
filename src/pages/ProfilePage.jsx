@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Button, Card, EmptyState, Input, LoadingState, PageHeader, Position, StatCard } from '../components/ui';
 
 export default function ProfilePage() {
-  const { logout, refreshUser } = useAuth();
+  const { logout, refreshUser, syncUser } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [name, setName] = useState('');
@@ -22,12 +22,19 @@ export default function ProfilePage() {
       const { data } = await api.get('/users/me/profile');
       setProfile(data.profile);
       setName(data.profile.name);
+      syncUser({
+        id: data.profile.id,
+        name: data.profile.name,
+        email: data.profile.email,
+        role: data.profile.role,
+        points: data.profile.totalPoints,
+      });
     } catch {
       toast.error('Erro ao carregar perfil.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [syncUser]);
 
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
