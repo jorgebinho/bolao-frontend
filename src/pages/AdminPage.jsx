@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import toast from 'react-hot-toast';
@@ -12,6 +12,16 @@ function generateTemporaryPassword() {
   const bytes = new Uint32Array(10);
   crypto.getRandomValues(bytes);
   return Array.from(bytes, (value) => alphabet[value % alphabet.length]).join('');
+}
+
+function hasFinishedResult(match) {
+  return (
+    match.status === 'FINISHED' &&
+    match.homeScore !== null &&
+    match.homeScore !== undefined &&
+    match.awayScore !== null &&
+    match.awayScore !== undefined
+  );
 }
 
 export default function AdminPage() {
@@ -30,6 +40,7 @@ export default function AdminPage() {
   const [passwordValue, setPasswordValue] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+  const [hideFinishedMatches, setHideFinishedMatches] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -162,6 +173,11 @@ export default function AdminPage() {
 
   const openMatches = matches.filter((match) => match.status === 'UPCOMING').length;
   const finishedMatches = matches.filter((match) => match.status === 'FINISHED').length;
+  const visibleMatches = useMemo(
+    () => matches.filter((match) => !hideFinishedMatches || !hasFinishedResult(match)),
+    [hideFinishedMatches, matches],
+  );
+  const hiddenFinishedMatches = matches.length - visibleMatches.length;
 
   return (
     <div>
@@ -202,14 +218,31 @@ export default function AdminPage() {
 
         {tab === 'matches' && (
           <div className="space-y-4">
-            <Button variant="success" className="w-full" onClick={openNewMatch}>CADASTRAR NOVO JOGO</Button>
+            <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-stretch">
+              <Button variant="success" className="w-full" onClick={openNewMatch}>CADASTRAR NOVO JOGO</Button>
+              <Button
+                type="button"
+                variant={hideFinishedMatches ? 'primary' : 'secondary'}
+                className="w-full md:w-auto"
+                onClick={() => setHideFinishedMatches((current) => !current)}
+              >
+                {hideFinishedMatches ? 'MOSTRAR FINALIZADOS' : 'OCULTAR FINALIZADOS'}
+              </Button>
+            </div>
+            {hideFinishedMatches && hiddenFinishedMatches > 0 && (
+              <p className="border-4 border-brutal-black bg-brutal-yellow p-3 text-sm font-bold">
+                {hiddenFinishedMatches} jogo(s) finalizado(s) com resultado oculto(s).
+              </p>
+            )}
             {loading ? (
               <LoadingState rows={3} type="row" />
             ) : matches.length === 0 ? (
               <EmptyState title="Nenhum jogo cadastrado" description="Crie o primeiro jogo para liberar palpites." />
+            ) : visibleMatches.length === 0 ? (
+              <EmptyState title="Nenhum jogo para exibir" description="Desative o filtro para ver os jogos finalizados com resultado." />
             ) : (
               <div className="grid gap-3 lg:grid-cols-2">
-                {matches.map((match) => (
+                {visibleMatches.map((match) => (
                   <button
                     key={match.id}
                     onClick={() => openEditMatch(match)}
