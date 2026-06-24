@@ -12,8 +12,8 @@ const STATUS = {
 };
 
 function pointsClass(points) {
-  if (points === 3) return "bg-brutal-green text-brutal-black";
-  if (points === 1) return "bg-brutal-yellow text-brutal-black";
+  if (points === 3 || points === 4) return "bg-brutal-green text-brutal-black";
+  if (points === 1 || points === 2) return "bg-brutal-yellow text-brutal-black";
   return "bg-brutal-white text-brutal-black";
 }
 
@@ -38,6 +38,10 @@ function stageHeaderClass(stage) {
 
   if (group) return groupColors[group] || groupColors.A;
   return "bg-brutal-black text-brutal-yellow";
+}
+
+function isKnockoutStage(stage) {
+  return Boolean(stage) && !String(stage).startsWith("Fase de Grupos");
 }
 
 function lockCountdownLabel(minutesToLock) {
@@ -310,24 +314,41 @@ function TeamBlock({ name, flag }) {
 export default function MatchCard({ match, onGuessSubmitted }) {
   const [homeInput, setHomeInput] = useState("");
   const [awayInput, setAwayInput] = useState("");
+  const [advancingTeam, setAdvancingTeam] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showGuesses, setShowGuesses] = useState(false);
 
   useEffect(() => {
     setHomeInput(match.myGuess?.homeGuess ?? "");
     setAwayInput(match.myGuess?.awayGuess ?? "");
-  }, [match.id, match.myGuess?.homeGuess, match.myGuess?.awayGuess]);
+    setAdvancingTeam(match.myGuess?.advancingTeam ?? "");
+  }, [match.id, match.myGuess?.homeGuess, match.myGuess?.awayGuess, match.myGuess?.advancingTeam]);
 
   const matchDate = new Date(match.matchDate);
   const status = STATUS[match.status] || STATUS.UPCOMING;
   const hasGuess = Boolean(match.myGuess);
   const isFinished = match.status === "FINISHED";
   const isLocked = match.isLocked;
+  const isKnockout = isKnockoutStage(match.stage);
+  const hasCompleteScoreGuess = homeInput !== "" && awayInput !== "";
+  const isDrawGuess = hasCompleteScoreGuess && Number(homeInput) === Number(awayInput);
+  const inferredAdvancingTeam =
+    hasCompleteScoreGuess && !isDrawGuess
+      ? Number(homeInput) > Number(awayInput)
+        ? match.homeTeam
+        : match.awayTeam
+      : "";
+  const selectedAdvancingTeam = isDrawGuess ? advancingTeam : inferredAdvancingTeam;
+  const shouldShowAdvancingTeam = isKnockout && hasCompleteScoreGuess;
 
   async function handleSubmit(event) {
     event.preventDefault();
     if (homeInput === "" || awayInput === "") {
       toast.error("Preencha os dois placares.");
+      return;
+    }
+    if (isKnockout && isDrawGuess && !advancingTeam) {
+      toast.error("Escolha quem se classifica.");
       return;
     }
 
@@ -336,6 +357,7 @@ export default function MatchCard({ match, onGuessSubmitted }) {
       await api.post(`/matches/${match.id}/guess`, {
         homeGuess: Number(homeInput),
         awayGuess: Number(awayInput),
+        advancingTeam: isKnockout ? selectedAdvancingTeam || null : null,
       });
       toast.success(hasGuess ? "Palpite atualizado." : "Palpite registrado.");
       onGuessSubmitted?.();
@@ -402,42 +424,109 @@ export default function MatchCard({ match, onGuessSubmitted }) {
                 {hasGuess ? "SEU PALPITE" : "SEM PALPITE"}
               </span>
               {hasGuess && (
-                <span className="font-display text-xl">
+                <span className="text-right font-display text-xl">
                   {match.myGuess.homeGuess} x {match.myGuess.awayGuess}
+                  {match.myGuess.advancingTeam && (
+                    <span className="block text-xs text-brutal-yellow/80">
+                      Classifica: {match.myGuess.advancingTeam}
+                    </span>
+                  )}
                 </span>
               )}
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="flex items-end gap-2">
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="0"
-                  max="30"
-                  value={homeInput}
-                  onChange={(event) => setHomeInput(event.target.value)}
-                  className="h-12 w-14 border-4 border-brutal-black bg-brutal-white text-center font-display text-2xl focus:bg-brutal-green focus:outline-none"
-                  placeholder="0"
-                />
-                <span className="font-display">X</span>
-                <input
-                  type="number"
-                  min="0"
-                  max="30"
-                  value={awayInput}
-                  onChange={(event) => setAwayInput(event.target.value)}
-                  className="h-12 w-14 border-4 border-brutal-black bg-brutal-white text-center font-display text-2xl focus:bg-brutal-green focus:outline-none"
-                  placeholder="0"
-                />
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div className="flex items-end gap-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    max="30"
+                    value={homeInput}
+                    onChange={(event) => setHomeInput(event.target.value)}
+                    className="h-12 w-14 border-4 border-brutal-black bg-brutal-white text-center font-display text-2xl focus:bg-brutal-green focus:outline-none"
+                    placeholder="0"
+                  />
+                  <span className="font-display">X</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="30"
+                    value={awayInput}
+                    onChange={(event) => setAwayInput(event.target.value)}
+                    className="h-12 w-14 border-4 border-brutal-black bg-brutal-white text-center font-display text-2xl focus:bg-brutal-green focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className="h-12 flex-1 px-2"
+                  size="sm"
+                  loading={submitting}
+                >
+                  {hasGuess ? "SALVAR" : "PALPITAR"}
+                </Button>
               </div>
-              <Button
-                type="submit"
-                className="h-12 flex-1 px-2"
-                size="sm"
-                loading={submitting}
-              >
-                {hasGuess ? "SALVAR" : "PALPITAR"}
-              </Button>
+              {shouldShowAdvancingTeam && (
+                <div className="border-4 border-brutal-black bg-brutal-white p-3 shadow-brutal">
+                  <div className="mb-3 grid grid-cols-[1fr_auto] items-center gap-3">
+                    <div>
+                      <p className="font-display text-xs tracking-wider text-brutal-black">
+                        {isDrawGuess ? "EMPATE NO TEMPO NORMAL" : "VITÓRIA NO TEMPO NORMAL"}
+                      </p>
+                      <p className="text-xs font-bold text-brutal-black/60">
+                        {isDrawGuess
+                          ? "Agora escolha quem passa de fase."
+                          : "O vencedor do tempo normal passa de fase."}
+                      </p>
+                    </div>
+                    <span className="border-2 border-brutal-black bg-brutal-yellow px-2 py-1 font-display text-[10px]">
+                      MATA-MATA
+                    </span>
+                  </div>
+
+                  <div className="mb-3 border-2 border-brutal-black bg-brutal-gray/30">
+                    <div className="grid grid-cols-[1fr_auto] items-center gap-3 border-b-2 border-brutal-black px-3 py-2">
+                      <span className="min-w-0 truncate text-sm font-black">{match.homeTeam}</span>
+                      <span className="font-display text-xl">{homeInput}</span>
+                    </div>
+                    <div className="grid grid-cols-[1fr_auto] items-center gap-3 px-3 py-2">
+                      <span className="min-w-0 truncate text-sm font-black">{match.awayTeam}</span>
+                      <span className="font-display text-xl">{awayInput}</span>
+                    </div>
+                  </div>
+
+                  <p className="mb-2 font-display text-xs tracking-wider">
+                    {isDrawGuess ? "QUEM PASSA?" : "CLASSIFICADO PELO PLACAR"}
+                  </p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {[match.homeTeam, match.awayTeam].map((team) => (
+                      <label
+                        key={team}
+                        className={`border-4 border-brutal-black p-3 transition-all ${
+                          isDrawGuess ? "cursor-pointer hover:translate-x-1 hover:translate-y-1" : "cursor-default"
+                        } ${
+                          selectedAdvancingTeam === team ? "bg-brutal-green shadow-none" : "bg-brutal-white shadow-brutal"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name={`advancing-${match.id}`}
+                          value={team}
+                          checked={selectedAdvancingTeam === team}
+                          onChange={(event) => setAdvancingTeam(event.target.value)}
+                          disabled={!isDrawGuess}
+                          className="sr-only"
+                        />
+                        <span className="block min-w-0 truncate font-display text-sm">{team}</span>
+                        <span className="mt-1 block text-xs font-black text-brutal-black/60">
+                          {selectedAdvancingTeam === team ? "CLASSIFICA" : isDrawGuess ? "SELECIONAR" : "NÃO CLASSIFICA"}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
             </form>
           )}
         </div>
@@ -454,6 +543,11 @@ export default function MatchCard({ match, onGuessSubmitted }) {
                 <p className="font-display text-xl">
                   {match.myGuess.homeGuess} x {match.myGuess.awayGuess}
                 </p>
+                {match.myGuess.advancingTeam && (
+                  <p className="text-xs font-bold">
+                    Classifica: {match.myGuess.advancingTeam}
+                  </p>
+                )}
               </div>
               <div className="text-right">
                 <p className="font-display text-xs">PONTOS</p>
@@ -486,6 +580,11 @@ export default function MatchCard({ match, onGuessSubmitted }) {
                   <span className="truncate">{guess.userName}</span>
                   <span className="font-display">
                     {guess.homeGuess} x {guess.awayGuess}
+                    {guess.advancingTeam && (
+                      <span className="block text-xs font-bold opacity-70">
+                        Classifica: {guess.advancingTeam}
+                      </span>
+                    )}
                   </span>
                   {isFinished && (
                     <span

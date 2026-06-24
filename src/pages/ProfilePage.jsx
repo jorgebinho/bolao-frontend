@@ -125,7 +125,12 @@ export default function ProfilePage() {
                           {guess.match.stage || 'Sem fase'} - {format(new Date(guess.match.matchDate), 'dd/MM HH:mm', { locale: ptBR })}
                         </p>
                       </div>
-                      <p className="font-display">Palpite {guess.homeGuess} x {guess.awayGuess}</p>
+                      <div className="font-display">
+                        <p>Palpite {guess.homeGuess} x {guess.awayGuess}</p>
+                        {guess.advancingTeam && (
+                          <p className="text-xs text-brutal-black/60">Classifica: {guess.advancingTeam}</p>
+                        )}
+                      </div>
                       <p className="font-display text-xl">{guess.points} pt</p>
                     </div>
                   ))}
