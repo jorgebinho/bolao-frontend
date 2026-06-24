@@ -109,6 +109,11 @@ export default function HistoryPage() {
                           ? `${guess.match.homeScore} x ${guess.match.awayScore}`
                           : "Pendente"}
                       </p>
+                      {guess.match.advancingTeam && (
+                        <p className="text-xs font-bold text-brutal-black/60">
+                          Classificado: {guess.match.advancingTeam}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <p className="text-xs font-bold text-brutal-black/50">
@@ -117,12 +122,17 @@ export default function HistoryPage() {
                       <p className="font-display">
                         {guess.homeGuess} x {guess.awayGuess}
                       </p>
+                      {guess.advancingTeam && (
+                        <p className="text-xs font-bold text-brutal-black/60">
+                          Classifica: {guess.advancingTeam}
+                        </p>
+                      )}
                     </div>
                     <Badge
                       tone={
-                        guess.points === 3
+                        guess.points === 3 || guess.points === 4
                           ? "success"
-                          : guess.points === 1
+                          : guess.points === 1 || guess.points === 2
                             ? "warning"
                             : "neutral"
                       }
