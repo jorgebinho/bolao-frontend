@@ -138,18 +138,26 @@ export default function RankingPage() {
           <p className="mt-2 text-sm font-bold text-brutal-black/60">
             {(tieBreakers.length ? tieBreakers : ['Pontos totais', 'Mais placares exatos', 'Mais acertos parciais']).join(' > ')}
           </p>
-          <div className="mt-4 grid gap-2 text-sm font-bold text-brutal-black/70 sm:grid-cols-3">
+          <div className="mt-4 grid gap-2 text-sm font-bold text-brutal-black/70 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="border-4 border-brutal-black bg-brutal-green p-3 text-brutal-black">
+              <p className="font-display text-xl">4 pts</p>
+              <p>Placar exato + classificado correto no mata-mata.</p>
+            </div>
             <div className="border-4 border-brutal-black bg-brutal-green p-3 text-brutal-black">
               <p className="font-display text-xl">3 pts</p>
               <p>Cravar o placar correto.</p>
             </div>
             <div className="border-4 border-brutal-black bg-brutal-yellow p-3 text-brutal-black">
+              <p className="font-display text-xl">+1 pt</p>
+              <p>Bônus por acertar o classificado no mata-mata.</p>
+            </div>
+            <div className="border-4 border-brutal-black bg-brutal-white p-3 text-brutal-black">
               <p className="font-display text-xl">1 pt</p>
-              <p>Acertar quem ganhou ou o empate.</p>
+              <p>Acertar vencedor ou empate no tempo normal.</p>
             </div>
             <div className="border-4 border-brutal-black bg-brutal-white p-3 text-brutal-black">
               <p className="font-display text-xl">0 pt</p>
-              <p>Errar o vencedor da partida.</p>
+              <p>Errar resultado e classificado.</p>
             </div>
           </div>
         </Card>

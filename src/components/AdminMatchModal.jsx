@@ -28,6 +28,10 @@ function toLocalDatetimeString(dateStr) {
   return format(d, "yyyy-MM-dd'T'HH:mm");
 }
 
+function isKnockoutStage(stage) {
+  return Boolean(stage) && !String(stage).startsWith('Fase de Grupos');
+}
+
 export default function AdminMatchModal({ match, onClose, onSaved }) {
   const isEditing = Boolean(match?.id);
   const isScoring = match?.status === 'LOCKED' || match?.status === 'FINISHED';
@@ -44,6 +48,7 @@ export default function AdminMatchModal({ match, onClose, onSaved }) {
   const [scoreForm, setScoreForm] = useState({
     homeScore: match?.homeScore !== null && match?.homeScore !== undefined ? String(match.homeScore) : '',
     awayScore: match?.awayScore !== null && match?.awayScore !== undefined ? String(match.awayScore) : '',
+    advancingTeam: match?.advancingTeam || '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -95,6 +100,18 @@ export default function AdminMatchModal({ match, onClose, onSaved }) {
       toast.error('Insira o placar completo!');
       return;
     }
+    const isDrawResult = Number(scoreForm.homeScore) === Number(scoreForm.awayScore);
+    const isKnockout = isKnockoutStage(match.stage);
+    const inferredAdvancingTeam = !isDrawResult
+      ? Number(scoreForm.homeScore) > Number(scoreForm.awayScore)
+        ? match.homeTeam
+        : match.awayTeam
+      : '';
+    const selectedAdvancingTeam = isDrawResult ? scoreForm.advancingTeam : inferredAdvancingTeam;
+    if (isKnockout && isDrawResult && !scoreForm.advancingTeam) {
+      toast.error('Escolha quem se classificou.');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -102,6 +119,7 @@ export default function AdminMatchModal({ match, onClose, onSaved }) {
         matchId: match.id,
         homeScore: parseInt(scoreForm.homeScore),
         awayScore: parseInt(scoreForm.awayScore),
+        advancingTeam: isKnockout ? selectedAdvancingTeam || null : null,
       });
       toast.success(`🏆 Pontuação calculada! ${data.summary?.length || 0} palpites processados.`);
       onSaved?.();
@@ -259,10 +277,25 @@ export default function AdminMatchModal({ match, onClose, onSaved }) {
           {/* TAB RESULTADO */}
           {activeTab === 'score' && match && (
             <form onSubmit={handleScoreMatch} className="space-y-4">
+              {(() => {
+                const hasCompleteResult = scoreForm.homeScore !== '' && scoreForm.awayScore !== '';
+                const isDrawResult = hasCompleteResult && Number(scoreForm.homeScore) === Number(scoreForm.awayScore);
+                const inferredAdvancingTeam =
+                  hasCompleteResult && !isDrawResult
+                    ? Number(scoreForm.homeScore) > Number(scoreForm.awayScore)
+                      ? match.homeTeam
+                      : match.awayTeam
+                    : '';
+                const selectedAdvancingTeam = isDrawResult ? scoreForm.advancingTeam : inferredAdvancingTeam;
+                const shouldShowAdvancingTeam = isKnockoutStage(match.stage) && hasCompleteResult;
+
+                return (
+                  <>
               {match.status === 'FINISHED' && (
                 <div className="bg-brutal-orange border-4 border-brutal-black p-3">
                   <p className="font-display text-xs text-brutal-black tracking-wider">
                     ⚠️ JOGO JÁ PONTUADO — Resultado atual: {match.homeScore} x {match.awayScore}
+                    {match.advancingTeam ? ` - Classificado: ${match.advancingTeam}` : ''}
                   </p>
                 </div>
               )}
@@ -310,6 +343,67 @@ export default function AdminMatchModal({ match, onClose, onSaved }) {
                 </div>
               </div>
 
+              {shouldShowAdvancingTeam && (
+                <div className="border-4 border-brutal-black bg-brutal-white p-3 shadow-brutal">
+                  <div className="mb-3 grid grid-cols-[1fr_auto] items-center gap-3">
+                    <div>
+                      <p className="font-display text-xs tracking-wider text-brutal-black">
+                        {isDrawResult ? 'EMPATE NO TEMPO NORMAL' : 'VITÓRIA NO TEMPO NORMAL'}
+                      </p>
+                      <p className="text-xs font-bold text-brutal-black/60">
+                        {isDrawResult
+                          ? 'Informe o classificado oficial para pontuar os palpites.'
+                          : 'O vencedor do tempo normal será salvo como classificado oficial.'}
+                      </p>
+                    </div>
+                    <span className="border-2 border-brutal-black bg-brutal-yellow px-2 py-1 font-display text-[10px]">
+                      OFICIAL
+                    </span>
+                  </div>
+
+                  <div className="mb-3 border-2 border-brutal-black bg-brutal-gray/30">
+                    <div className="grid grid-cols-[1fr_auto] items-center gap-3 border-b-2 border-brutal-black px-3 py-2">
+                      <span className="min-w-0 truncate text-sm font-black">{match.homeTeam}</span>
+                      <span className="font-display text-xl">{scoreForm.homeScore}</span>
+                    </div>
+                    <div className="grid grid-cols-[1fr_auto] items-center gap-3 px-3 py-2">
+                      <span className="min-w-0 truncate text-sm font-black">{match.awayTeam}</span>
+                      <span className="font-display text-xl">{scoreForm.awayScore}</span>
+                    </div>
+                  </div>
+
+                  <p className="mb-2 font-display text-xs tracking-wider text-brutal-black">
+                    {isDrawResult ? 'QUEM SE CLASSIFICOU?' : 'CLASSIFICADO PELO PLACAR'}
+                  </p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {[match.homeTeam, match.awayTeam].map((team) => (
+                      <label
+                        key={team}
+                        className={`cursor-pointer border-4 border-brutal-black p-3 transition-all ${
+                          match.status === 'FINISHED' || !isDrawResult
+                            ? 'cursor-not-allowed opacity-70'
+                            : 'hover:translate-x-1 hover:translate-y-1'
+                        } ${selectedAdvancingTeam === team ? 'bg-brutal-green shadow-none' : 'bg-brutal-white shadow-brutal'}`}
+                      >
+                        <input
+                          type="radio"
+                          name={`official-advancing-${match.id}`}
+                          value={team}
+                          checked={selectedAdvancingTeam === team}
+                          onChange={(e) => setScoreForm((f) => ({ ...f, advancingTeam: e.target.value }))}
+                          disabled={match.status === 'FINISHED' || !isDrawResult}
+                          className="sr-only"
+                        />
+                        <span className="block min-w-0 truncate font-display text-sm">{team}</span>
+                        <span className="mt-1 block text-xs font-black text-brutal-black/60">
+                          {selectedAdvancingTeam === team ? 'CLASSIFICADO' : isDrawResult ? 'SELECIONAR' : 'NÃO CLASSIFICADO'}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {match.status !== 'FINISHED' && (
                 <button
                   type="submit"
@@ -323,6 +417,9 @@ export default function AdminMatchModal({ match, onClose, onSaved }) {
               <p className="text-center font-body text-xs text-brutal-black/50">
                 Isso calculará os pontos de todos os participantes.
               </p>
+                  </>
+                );
+              })()}
             </form>
           )}
         </div>
