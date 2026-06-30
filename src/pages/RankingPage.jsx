@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import api from '../lib/api';
-import { Badge, Card, EmptyState, LoadingState, PageHeader, Position, Select, StatCard } from '../components/ui';
+import { Badge, Button, Card, EmptyState, LoadingState, PageHeader, Position, Select, StatCard } from '../components/ui';
 
 export default function RankingPage() {
   const [ranking, setRanking] = useState([]);
@@ -9,6 +11,9 @@ export default function RankingPage() {
   const [activeGroup, setActiveGroup] = useState('general');
   const [loading, setLoading] = useState(true);
   const [tieBreakers, setTieBreakers] = useState([]);
+  const [recentGuessesByUser, setRecentGuessesByUser] = useState({});
+  const [recentGuessesLoading, setRecentGuessesLoading] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -28,6 +33,26 @@ export default function RankingPage() {
   }, [activeGroup]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  async function openRecentGuesses(player) {
+    setSelectedPlayer(player);
+
+    if (recentGuessesByUser[player.id]) return;
+
+    setRecentGuessesLoading(true);
+    try {
+      const { data } = await api.get(`/ranking/users/${player.id}/recent-guesses`);
+      setRecentGuessesByUser((current) => ({
+        ...current,
+        [player.id]: data.guesses || [],
+      }));
+    } catch {
+      toast.error('Erro ao carregar últimos palpites.');
+      setRecentGuessesByUser((current) => ({ ...current, [player.id]: [] }));
+    } finally {
+      setRecentGuessesLoading(false);
+    }
+  }
 
   const top3 = ranking.slice(0, 3);
   const currentUser = ranking.find((player) => player.isCurrentUser);
@@ -120,6 +145,13 @@ export default function RankingPage() {
                     <p className="text-xs font-bold text-brutal-black/50">
                       {player.championGuess?.team ? `Campeão: ${player.championGuess.team}` : 'Sem campeão'}
                     </p>
+                    <button
+                      type="button"
+                      onClick={() => openRecentGuesses(player)}
+                      className="mt-2 border-2 border-brutal-black bg-brutal-yellow px-2 py-1 font-display text-[10px] tracking-wider text-brutal-black transition-all hover:bg-brutal-black hover:text-brutal-yellow"
+                    >
+                      Últimos palpites
+                    </button>
                   </div>
                   <div className="grid grid-cols-4 gap-2 md:contents">
                     <p className="font-display md:col-span-2 md:text-center">{player.totalPoints}</p>
@@ -162,6 +194,70 @@ export default function RankingPage() {
           </div>
         </Card>
       </div>
+
+      {selectedPlayer && (
+        <div className="fixed inset-0 z-50 flex items-end bg-brutal-black/70 p-3 sm:items-center sm:justify-center">
+          <Card className="max-h-[90vh] w-full overflow-hidden sm:max-w-2xl">
+            <div className="flex items-start justify-between gap-3 border-b-4 border-brutal-black bg-brutal-yellow p-4">
+              <div className="min-w-0">
+                <p className="font-display text-xs tracking-wider text-brutal-black/60">PALPITES RECENTES</p>
+                <h2 className="truncate font-display text-xl">{selectedPlayer.name}</h2>
+              </div>
+              <Button type="button" size="sm" variant="secondary" onClick={() => setSelectedPlayer(null)}>
+                FECHAR
+              </Button>
+            </div>
+
+            <div className="max-h-[70vh] overflow-y-auto">
+              {recentGuessesLoading && !recentGuessesByUser[selectedPlayer.id] ? (
+                <div className="p-4">
+                  <LoadingState rows={3} type="row" />
+                </div>
+              ) : (recentGuessesByUser[selectedPlayer.id] || []).length === 0 ? (
+                <div className="p-4">
+                  <EmptyState title="Nenhum palpite encontrado." />
+                </div>
+              ) : (
+                <div className="divide-y-2 divide-brutal-black/10">
+                  {(recentGuessesByUser[selectedPlayer.id] || []).map((guess) => (
+                    <div key={guess.id} className="grid gap-3 p-4 sm:grid-cols-[1fr_auto_auto_auto] sm:items-center">
+                      <div className="min-w-0">
+                        <p className="font-display">{guess.match.homeTeam} x {guess.match.awayTeam}</p>
+                        <p className="text-xs font-bold text-brutal-black/50">
+                          {(guess.match.stage || 'Sem fase')} - {format(new Date(guess.updatedAt), 'dd/MM HH:mm', { locale: ptBR })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-brutal-black/50">Resultado</p>
+                        <p className="font-display">
+                          {guess.match.status === 'FINISHED'
+                            ? `${guess.match.homeScore} x ${guess.match.awayScore}`
+                            : 'Pendente'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-brutal-black/50">Palpite</p>
+                        <p className="font-display">{guess.homeGuess} x {guess.awayGuess}</p>
+                      </div>
+                      <Badge
+                        tone={
+                          guess.points === 3
+                            ? 'success'
+                            : guess.points === 1
+                              ? 'warning'
+                              : 'neutral'
+                        }
+                      >
+                        {guess.points} PT
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
